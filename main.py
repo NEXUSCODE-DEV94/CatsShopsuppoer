@@ -7,10 +7,10 @@ from keep_alive import keep_alive
 # =====================
 # 固定ID設定（ここだけ書き換え）
 # =====================
-ADMIN_ROLE_ID = 1313086280141373441      # 管理者ロールID
-TICKET_CATEGORY_ID = 1450086411956129894# 未対応チケットカテゴリID
-DONE_CATEGORY_ID = 1450086104182034512  # 対応済みカテゴリID
-LOG_CHANNEL_ID = 1313099999537532928    # ログ送信先
+ADMIN_ROLE_ID = 1313086280141373441
+TICKET_CATEGORY_ID = 1450086411956129894
+DONE_CATEGORY_ID = 1450086104182034512
+LOG_CHANNEL_ID = 1313099999537532928
 STOCK_CHANNEL_ID = 1451850275592601731
 
 TICKET_CUSTOM_ID = "ticket_open_button"
@@ -202,24 +202,24 @@ async def add_stock(
         return
 
     embed = discord.Embed(
-        title="📦 在庫追加通知",
+        title="在庫追加通知",
         color=discord.Color.green()
     )
 
     embed.add_field(
-        name="🛒 商品名",
+        name="商品名",
         value=product_name,
         inline=False
     )
 
     embed.add_field(
-        name="📊 追加個数",
+        name="追加個数",
         value=f"**{amount} 個**",
         inline=False
     )
 
     embed.add_field(
-        name="👤 実行者",
+        name="実行者",
         value=interaction.user.mention,
         inline=False
     )
@@ -239,8 +239,8 @@ async def add_stock(
 # =====================
 @bot.event
 async def on_ready():
-    bot.add_view(TicketView())          # ← 永続チケットボタン
-    bot.add_view(AdminPanelView(0))     # ← 永続管理ボタン
+    bot.add_view(TicketView())
+    bot.add_view(AdminPanelView(0))
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.competing,
