@@ -224,7 +224,7 @@ async def add_stock(
         inline=False
     )
 
-    embed.set_footer(text="Cats Shop Inventory System")
+    embed.set_footer(text="Cats Shop Stock System")
     embed.timestamp = discord.utils.utcnow()
 
     await stock_channel.send(embed=embed)
@@ -255,3 +255,4 @@ async def on_ready():
 # =====================
 keep_alive()
 bot.run(TOKEN)
+
