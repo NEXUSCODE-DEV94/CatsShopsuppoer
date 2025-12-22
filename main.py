@@ -2,7 +2,6 @@ import os
 import discord
 from discord.ext import commands
 from typing import Optional
-from keep_alive import keep_alive
 
 # =====================
 # 固定ID設定
@@ -44,13 +43,18 @@ class TicketView(discord.ui.View):
         guild = interaction.guild
         user = interaction.user
 
-        admin_role = guild.get_role(ADMIN_ROLE_ID)
         category = guild.get_channel(TICKET_CATEGORY_ID)
         log_channel = guild.get_channel(LOG_CHANNEL_ID)
 
-        if not admin_role or not category:
+        admin_roles = [
+            guild.get_role(rid)
+            for rid in ADMIN_ROLE_ID
+            if guild.get_role(rid)
+        ]
+
+        if not category:
             await interaction.response.send_message(
-                "設定エラー：ロールまたはカテゴリが見つかりません。",
+                "設定エラー：カテゴリが見つかりません。",
                 ephemeral=True
             )
             return
@@ -58,8 +62,13 @@ class TicketView(discord.ui.View):
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
-            admin_role: discord.PermissionOverwrite(view_channel=True, send_messages=True)
         }
+
+        for role in admin_roles:
+            overwrites[role] = discord.PermissionOverwrite(
+                view_channel=True,
+                send_messages=True
+            )
 
         channel = await guild.create_text_channel(
             f"🎫¦{user.name}",
@@ -69,7 +78,11 @@ class TicketView(discord.ui.View):
 
         embed = discord.Embed(
             title="チケット作成完了",
-            description=f"{user.mention}\n\nこのチャンネルで内容を送信してください。",
+            description=(
+                f"{user.mention}\n\n"
+                "このチャンネルで内容を送信してください。\n"
+                "迷惑行為は禁止されています。"
+            ),
             color=discord.Color.green()
         )
 
@@ -79,7 +92,10 @@ class TicketView(discord.ui.View):
             await log_channel.send(
                 embed=discord.Embed(
                     title="チケット作成",
-                    description=f"作成者: {user.mention}\nチャンネル: {channel.mention}",
+                    description=(
+                        f"作成者: {user.mention}\n"
+                        f"チャンネル: {channel.mention}"
+                    ),
                     color=discord.Color.green()
                 )
             )
@@ -98,8 +114,10 @@ class AdminPanelView(discord.ui.View):
         self.owner_id = owner_id
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        role = interaction.guild.get_role(ADMIN_ROLE_ID)
-        return role in interaction.user.roles if role else False
+        return any(
+            role.id in ADMIN_ROLE_ID
+            for role in interaction.user.roles
+        )
 
     @discord.ui.button(label="対応済み", style=discord.ButtonStyle.blurple, custom_id="ticket_done")
     async def done(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -118,7 +136,10 @@ class AdminPanelView(discord.ui.View):
             await log_channel.send(
                 embed=discord.Embed(
                     title="チケット対応済み",
-                    description=f"{channel.mention}\n対応者: {interaction.user.mention}",
+                    description=(
+                        f"{channel.mention}\n"
+                        f"対応者: {interaction.user.mention}"
+                    ),
                     color=discord.Color.blurple()
                 )
             )
@@ -133,7 +154,10 @@ class AdminPanelView(discord.ui.View):
             await log_channel.send(
                 embed=discord.Embed(
                     title="チケット削除",
-                    description=f"削除者: {interaction.user.mention}\n{interaction.channel.name}",
+                    description=(
+                        f"削除者: {interaction.user.mention}\n"
+                        f"チャンネル: {interaction.channel.name}"
+                    ),
                     color=discord.Color.red()
                 )
             )
@@ -154,7 +178,7 @@ async def ticket(
 ):
     embed = discord.Embed(
         title=title or "チケット",
-        description=description or "下のボタンからチケットを作成できます。",
+        description=description or "購入 / 問い合わせ\n迷惑行為禁止",
         color=discord.Color.blurple()
     )
 
@@ -168,46 +192,16 @@ async def ticket(
     await interaction.response.send_message("設置完了", ephemeral=True)
 
 # =====================
-# /add-stock（修正版）
-# =====================
-@bot.tree.command(name="add-stock", description="在庫を追加して通知します")
-async def add_stock(interaction: discord.Interaction, amount: int, product_name: str):
-    await interaction.response.defer(ephemeral=True)
-
-    stock_channel = interaction.guild.get_channel(STOCK_CHANNEL_ID)
-    if not stock_channel:
-        await interaction.followup.send("在庫通知チャンネルが見つかりません。", ephemeral=True)
-        return
-
-    embed = discord.Embed(title="📦 在庫追加通知", color=discord.Color.green())
-    embed.add_field(name="商品名", value=product_name, inline=False)
-    embed.add_field(name="追加個数", value=f"{amount} 個", inline=False)
-    embed.add_field(name="実行者", value=interaction.user.mention, inline=False)
-    embed.set_footer(text="Cats Shop Stock System")
-    embed.timestamp = discord.utils.utcnow()
-
-    await stock_channel.send(embed=embed)
-    await interaction.followup.send("在庫を追加しました。", ephemeral=True)
-
-# =====================
 # 起動時処理
 # =====================
 @bot.event
 async def on_ready():
     bot.add_view(TicketView())
     bot.add_view(AdminPanelView(0))
-    await bot.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.competing,
-            name="Cats Shop🛒 | 🔧:oql87"
-        )
-    )
     await bot.tree.sync()
     print("BOT IS READY!!")
 
 # =====================
 # 実行
 # =====================
-keep_alive()
 bot.run(TOKEN)
-
