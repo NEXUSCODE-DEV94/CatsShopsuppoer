@@ -199,7 +199,7 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.competing,
-            name="Cats Shop🛒"
+            name="Cats Shop🛒 | 🔧:oql87"
         )
     )
     await bot.tree.sync()
