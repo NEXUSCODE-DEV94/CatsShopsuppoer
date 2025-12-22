@@ -7,7 +7,7 @@ from keep_alive import keep_alive
 # =====================
 # 固定ID設定
 # =====================
-ADMIN_ROLE_ID = 1313086280141373441
+ADMIN_ROLE_ID = [1313086280141373441, 1452291945413083247]
 TICKET_CATEGORY_ID = 1450086411956129894
 DONE_CATEGORY_ID = 1450086104182034512
 LOG_CHANNEL_ID = 1313099999537532928
@@ -210,3 +210,4 @@ async def on_ready():
 # =====================
 keep_alive()
 bot.run(TOKEN)
+
