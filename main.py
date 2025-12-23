@@ -74,7 +74,6 @@ class TicketView(discord.ui.View):
         )
 
         embed = discord.Embed(
-            title="チケット作成完了",
             description=(
                 f"{user.mention}\n\n"
                 "このチャンネルで内容を送信してください。\n"
@@ -88,7 +87,6 @@ class TicketView(discord.ui.View):
         if log_channel:
             await log_channel.send(
                 embed=discord.Embed(
-                    title="チケット作成",
                     description=f"{user.mention}\n{channel.mention}",
                     color=discord.Color.green()
                 )
@@ -126,7 +124,6 @@ class AdminPanelView(discord.ui.View):
         if log_channel:
             await log_channel.send(
                 embed=discord.Embed(
-                    title="対応済み",
                     description=f"{channel.mention}\n{interaction.user.mention}",
                     color=discord.Color.blurple()
                 )
@@ -141,7 +138,6 @@ class AdminPanelView(discord.ui.View):
         if log_channel:
             await log_channel.send(
                 embed=discord.Embed(
-                    title="チケット削除",
                     description=f"{interaction.user.mention}\n{interaction.channel.name}",
                     color=discord.Color.red()
                 )
@@ -151,19 +147,20 @@ class AdminPanelView(discord.ui.View):
         await interaction.channel.delete()
 
 # =====================
-# /ticket
+# /ticket（パネル設置＋ピン留め）
 # =====================
-@bot.tree.command(name="ticket", description="チケットボタンを設置")
+@bot.tree.command(name="ticket", description="チケットパネルを設置")
 async def ticket(
     interaction: discord.Interaction,
     button_name: str,
-    title: Optional[str] = None,
-    description: Optional[str] = None,
     image_url: Optional[str] = None
 ):
     embed = discord.Embed(
-        title=title or "チケット",
-        description=description or "購入 / 問い合わせ\n迷惑行為禁止",
+        description=(
+            "__Ticket Panel__\n"
+            "> 購入 / お問い合わせ\n"
+            "> 迷惑行為禁止"
+        ),
         color=discord.Color.blurple()
     )
 
@@ -173,7 +170,8 @@ async def ticket(
     view = TicketView()
     view.children[0].label = button_name
 
-    await interaction.channel.send(embed=embed, view=view)
+    msg = await interaction.channel.send(embed=embed, view=view)
+    await msg.pin(reason="Ticket Panel")
     await interaction.response.send_message("設置完了", ephemeral=True)
 
 # =====================
