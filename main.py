@@ -1,4 +1,5 @@
 import os
+import asyncio
 import discord
 from discord.ext import commands
 from typing import Optional
@@ -20,10 +21,11 @@ TICKET_CUSTOM_ID = "ticket_open_button"
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
+# message_content intent が必要なら有効化
+# intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 TOKEN = os.environ.get("DISCORD_TOKEN")
-
 if not TOKEN:
     raise RuntimeError("DISCORD_TOKEN が設定されていません")
 
@@ -74,28 +76,23 @@ class TicketView(discord.ui.View):
         )
 
         embed = discord.Embed(
-            description=(
-                f"{user.mention}\n\n"
-                "このチャンネルで内容を送信してください。\n"
-                "迷惑行為禁止"
-            ),
+            description=(f"{user.mention}\n\nこのチャンネルで内容を送信してください。\n迷惑行為禁止"),
             color=discord.Color.green()
         )
 
-        await channel.send(embed=embed, view=AdminPanelView(user.id))
+        try:
+            await channel.send(embed=embed, view=AdminPanelView(user.id))
+        except discord.HTTPException as e:
+            if e.status == 429:
+                await asyncio.sleep(5)
+                await channel.send(embed=embed, view=AdminPanelView(user.id))
 
         if log_channel:
             await log_channel.send(
-                embed=discord.Embed(
-                    description=f"{user.mention}\n{channel.mention}",
-                    color=discord.Color.green()
-                )
+                embed=discord.Embed(description=f"{user.mention}\n{channel.mention}", color=discord.Color.green())
             )
 
-        await interaction.response.send_message(
-            f"{channel.mention} を作成しました",
-            ephemeral=True
-        )
+        await interaction.response.send_message(f"{channel.mention} を作成しました", ephemeral=True)
 
 # =====================
 # 管理者パネル
@@ -123,10 +120,7 @@ class AdminPanelView(discord.ui.View):
 
         if log_channel:
             await log_channel.send(
-                embed=discord.Embed(
-                    description=f"{channel.mention}\n{interaction.user.mention}",
-                    color=discord.Color.blurple()
-                )
+                embed=discord.Embed(description=f"{channel.mention}\n{interaction.user.mention}", color=discord.Color.blurple)
             )
 
         await interaction.response.send_message("対応済みにしました", ephemeral=True)
@@ -137,17 +131,14 @@ class AdminPanelView(discord.ui.View):
 
         if log_channel:
             await log_channel.send(
-                embed=discord.Embed(
-                    description=f"{interaction.user.mention}\n{interaction.channel.name}",
-                    color=discord.Color.red()
-                )
+                embed=discord.Embed(description=f"{interaction.user.mention}\n{interaction.channel.name}", color=discord.Color.red)
             )
 
         await interaction.response.send_message("削除します", ephemeral=True)
         await interaction.channel.delete()
 
 # =====================
-# /ticket（パネル設置＋ピン留め）
+# /ticket コマンド
 # =====================
 @bot.tree.command(name="ticket", description="チケットパネルを設置")
 async def ticket(
@@ -156,22 +147,24 @@ async def ticket(
     image_url: Optional[str] = None
 ):
     embed = discord.Embed(
-        description=(
-            "__Ticket Panel__\n"
-            "> 購入 / お問い合わせ\n"
-            "> 迷惑行為禁止"
-        ),
-        color=discord.Color.blurple()
+        description="__Ticket Panel__\n> 購入 / お問い合わせ\n> 迷惑行為禁止",
+        color=discord.Color.blurple
     )
-
     if image_url:
         embed.set_image(url=image_url)
 
     view = TicketView()
     view.children[0].label = button_name
 
-    msg = await interaction.channel.send(embed=embed, view=view)
-    await msg.pin(reason="Ticket Panel")
+    try:
+        msg = await interaction.channel.send(embed=embed, view=view)
+        await msg.pin(reason="Ticket Panel")
+    except discord.HTTPException as e:
+        if e.status == 429:
+            await asyncio.sleep(5)
+            msg = await interaction.channel.send(embed=embed, view=view)
+            await msg.pin(reason="Ticket Panel")
+
     await interaction.response.send_message("設置完了", ephemeral=True)
 
 # =====================
@@ -185,6 +178,18 @@ async def on_ready():
     print("BOT READY")
 
 # =====================
-# 実行
+# 安全な起動（429対応）
 # =====================
-bot.run(TOKEN)
+async def start_bot():
+    while True:
+        try:
+            await bot.start(TOKEN)
+            break
+        except discord.HTTPException as e:
+            if e.status == 429:
+                print("429 Too Many Requests, waiting 10s...")
+                await asyncio.sleep(10)
+            else:
+                raise
+
+asyncio.run(start_bot())
