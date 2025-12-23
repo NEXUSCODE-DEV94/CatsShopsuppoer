@@ -21,8 +21,6 @@ TICKET_CUSTOM_ID = "ticket_open_button"
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
-# message_content intent が必要なら有効化
-# intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -178,18 +176,7 @@ async def on_ready():
     print("BOT READY")
 
 # =====================
-# 安全な起動（429対応）
+# 安全な起動（Render向け）
 # =====================
-async def start_bot():
-    while True:
-        try:
-            await bot.start(TOKEN)
-            break
-        except discord.HTTPException as e:
-            if e.status == 429:
-                print("429 Too Many Requests, waiting 10s...")
-                await asyncio.sleep(10)
-            else:
-                raise
-
-asyncio.run(start_bot())
+if __name__ == "__main__":
+    bot.run(TOKEN)
