@@ -3,6 +3,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from typing import Optional
+from aiohttp import web
 
 # =====================
 # 固定ID設定
@@ -21,6 +22,7 @@ TICKET_CUSTOM_ID = "ticket_open_button"
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
+intents.message_content = True  # 権限がある場合は必須
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -176,7 +178,27 @@ async def on_ready():
     print("BOT READY")
 
 # =====================
-# 安全な起動（Render向け）
+# Render 用 HTTP サーバー
 # =====================
+async def handle(request):
+    return web.Response(text="Discord Bot is running!")
+
+async def start_webserver():
+    port = int(os.environ.get("PORT", 10000))  # Render が指定するポート
+    app = web.Application()
+    app.add_routes([web.get("/", handle)])
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"Web server running on port {port}")
+
+# =====================
+# Bot と Web サーバーを同時起動
+# =====================
+async def main():
+    await start_webserver()
+    await bot.start(TOKEN)
+
 if __name__ == "__main__":
-    bot.run(TOKEN)
+    asyncio.run(main())
