@@ -3,7 +3,6 @@ import asyncio
 import discord
 from discord.ext import commands
 from typing import Optional
-from aiohttp import web
 
 # =====================
 # 固定ID設定
@@ -22,7 +21,7 @@ TICKET_CUSTOM_ID = "ticket_open_button"
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
-intents.message_content = True  # 権限がある場合は必須
+intents.message_content = True  # コマンド利用やメッセージ取得用
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -76,16 +75,11 @@ class TicketView(discord.ui.View):
         )
 
         embed = discord.Embed(
-            description=(f"{user.mention}\n\nこのチャンネルで内容を送信してください。\n迷惑行為禁止"),
+            description=f"{user.mention}\n\nこのチャンネルで内容を送信してください。\n迷惑行為禁止",
             color=discord.Color.green()
         )
 
-        try:
-            await channel.send(embed=embed, view=AdminPanelView(user.id))
-        except discord.HTTPException as e:
-            if e.status == 429:
-                await asyncio.sleep(5)
-                await channel.send(embed=embed, view=AdminPanelView(user.id))
+        await channel.send(embed=embed, view=AdminPanelView(user.id))
 
         if log_channel:
             await log_channel.send(
@@ -156,15 +150,8 @@ async def ticket(
     view = TicketView()
     view.children[0].label = button_name
 
-    try:
-        msg = await interaction.channel.send(embed=embed, view=view)
-        await msg.pin(reason="Ticket Panel")
-    except discord.HTTPException as e:
-        if e.status == 429:
-            await asyncio.sleep(5)
-            msg = await interaction.channel.send(embed=embed, view=view)
-            await msg.pin(reason="Ticket Panel")
-
+    msg = await interaction.channel.send(embed=embed, view=view)
+    await msg.pin(reason="Ticket Panel")
     await interaction.response.send_message("設置完了", ephemeral=True)
 
 # =====================
@@ -178,27 +165,7 @@ async def on_ready():
     print("BOT READY")
 
 # =====================
-# Render 用 HTTP サーバー
+# Render用 Background Worker 起動
 # =====================
-async def handle(request):
-    return web.Response(text="Discord Bot is running!")
-
-async def start_webserver():
-    port = int(os.environ.get("PORT", 10000))  # Render が指定するポート
-    app = web.Application()
-    app.add_routes([web.get("/", handle)])
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-    print(f"Web server running on port {port}")
-
-# =====================
-# Bot と Web サーバーを同時起動
-# =====================
-async def main():
-    await start_webserver()
-    await bot.start(TOKEN)
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(bot.start(TOKEN))
