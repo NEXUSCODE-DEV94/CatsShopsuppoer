@@ -3,6 +3,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from typing import Optional
+from aiohttp import web
 
 # =====================
 # 固定ID設定
@@ -22,8 +23,8 @@ intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
 intents.message_content = True
-
 bot = commands.Bot(command_prefix="!", intents=intents)
+
 TOKEN = os.environ.get("DISCORD_TOKEN")
 if not TOKEN:
     raise RuntimeError("DISCORD_TOKEN が設定されていません")
@@ -156,7 +157,28 @@ async def on_ready():
     print("BOT READY")
 
 # =====================
-# Bot起動
+# Render用 Webサーバ＋Bot起動
+# =====================
+async def start_web_and_bot():
+    # Webサーバ
+    from aiohttp import web
+    async def handle(request):
+        return web.Response(text="Bot is running")
+
+    app = web.Application()
+    app.router.add_get("/", handle)
+    port = int(os.environ.get("PORT", 10000))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"Web server running on port {port}")
+
+    # Bot 起動
+    await bot.start(TOKEN)
+
+# =====================
+# 起動
 # =====================
 if __name__ == "__main__":
-    asyncio.run(bot.start(TOKEN))
+    asyncio.run(start_web_and_bot())
