@@ -29,66 +29,6 @@ if not TOKEN:
     raise RuntimeError("DISCORD_TOKEN が設定されていません")
 
 # =====================
-# チケット作成View
-# =====================
-class TicketView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.button(
-        label="OPEN",
-        style=discord.ButtonStyle.green,
-        custom_id=TICKET_CUSTOM_ID
-    )
-    async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        guild = interaction.guild
-        user = interaction.user
-
-        category = guild.get_channel(TICKET_CATEGORY_ID)
-        log_channel = guild.get_channel(LOG_CHANNEL_ID)
-
-        admin_roles = [
-            guild.get_role(rid)
-            for rid in ADMIN_ROLE_ID
-            if guild.get_role(rid)
-        ]
-
-        if not category:
-            await interaction.response.send_message("カテゴリが見つかりません", ephemeral=True)
-            return
-
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
-        }
-
-        for role in admin_roles:
-            overwrites[role] = discord.PermissionOverwrite(
-                view_channel=True,
-                send_messages=True
-            )
-
-        channel = await guild.create_text_channel(
-            f"🎫¦{user.name}",
-            category=category,
-            overwrites=overwrites
-        )
-
-        embed = discord.Embed(
-            description=f"{user.mention}\n\nこのチャンネルで内容を送信してください。\n迷惑行為禁止",
-            color=discord.Color.green()
-        )
-
-        await channel.send(embed=embed, view=AdminPanelView(user.id))
-
-        if log_channel:
-            await log_channel.send(
-                embed=discord.Embed(description=f"{user.mention}\n{channel.mention}", color=discord.Color.green())
-            )
-
-        await interaction.response.send_message(f"{channel.mention} を作成しました", ephemeral=True)
-
-# =====================
 # 管理者パネル
 # =====================
 class AdminPanelView(discord.ui.View):
@@ -122,14 +62,60 @@ class AdminPanelView(discord.ui.View):
     @discord.ui.button(label="チケット削除", style=discord.ButtonStyle.red, custom_id="ticket_delete")
     async def delete(self, interaction: discord.Interaction, button: discord.ui.Button):
         log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
-
         if log_channel:
             await log_channel.send(
                 embed=discord.Embed(description=f"{interaction.user.mention}\n{interaction.channel.name}", color=discord.Color.red)
             )
-
         await interaction.response.send_message("削除します", ephemeral=True)
         await interaction.channel.delete()
+
+# =====================
+# チケット作成View
+# =====================
+class TicketView(discord.ui.View):
+    def __init__(self, button_label: str):
+        super().__init__(timeout=None)
+        self.add_item(discord.ui.Button(label=button_label, style=discord.ButtonStyle.green, custom_id=TICKET_CUSTOM_ID))
+
+    @discord.ui.button(custom_id=TICKET_CUSTOM_ID, style=discord.ButtonStyle.green, label="OPEN")
+    async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        guild = interaction.guild
+        user = interaction.user
+        category = guild.get_channel(TICKET_CATEGORY_ID)
+        log_channel = guild.get_channel(LOG_CHANNEL_ID)
+
+        admin_roles = [guild.get_role(rid) for rid in ADMIN_ROLE_ID if guild.get_role(rid)]
+
+        if not category:
+            await interaction.response.send_message("カテゴリが見つかりません", ephemeral=True)
+            return
+
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(view_channel=False),
+            user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
+        }
+
+        for role in admin_roles:
+            overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+
+        channel = await guild.create_text_channel(
+            f"🎫¦{user.name}",
+            category=category,
+            overwrites=overwrites
+        )
+
+        embed = discord.Embed(
+            description=f"{user.mention}\n\nこのチャンネルで内容を送信してください。\n迷惑行為禁止",
+            color=discord.Color.green()
+        )
+        await channel.send(embed=embed, view=AdminPanelView(user.id))
+
+        if log_channel:
+            await log_channel.send(
+                embed=discord.Embed(description=f"{user.mention}\n{channel.mention}", color=discord.Color.green())
+            )
+
+        await interaction.response.send_message(f"{channel.mention} を作成しました", ephemeral=True)
 
 # =====================
 # /ticket コマンド
@@ -147,9 +133,7 @@ async def ticket(
     if image_url:
         embed.set_image(url=image_url)
 
-    view = TicketView()
-    view.children[0].label = button_name
-
+    view = TicketView(button_label=button_name)
     msg = await interaction.channel.send(embed=embed, view=view)
     await msg.pin(reason="Ticket Panel")
     await interaction.response.send_message("設置完了", ephemeral=True)
@@ -159,13 +143,11 @@ async def ticket(
 # =====================
 @bot.event
 async def on_ready():
-    bot.add_view(TicketView())
-    bot.add_view(AdminPanelView(0))
     await bot.tree.sync()
     print("BOT READY")
 
 # =====================
-# Render用 Background Worker 起動
+# 起動
 # =====================
 if __name__ == "__main__":
     asyncio.run(bot.start(TOKEN))
