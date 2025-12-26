@@ -21,7 +21,7 @@ TICKET_CUSTOM_ID = "ticket_open_button"
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
-intents.message_content = True  # コマンド利用やメッセージ取得用
+intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -54,7 +54,10 @@ class AdminPanelView(discord.ui.View):
 
         if log_channel:
             await log_channel.send(
-                embed=discord.Embed(description=f"{channel.mention}\n{interaction.user.mention}", color=discord.Color.blurple)
+                embed=discord.Embed(
+                    description=f"{channel.mention}\n{interaction.user.mention}",
+                    color=discord.Color.blurple
+                )
             )
 
         await interaction.response.send_message("対応済みにしました", ephemeral=True)
@@ -64,7 +67,10 @@ class AdminPanelView(discord.ui.View):
         log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
         if log_channel:
             await log_channel.send(
-                embed=discord.Embed(description=f"{interaction.user.mention}\n{interaction.channel.name}", color=discord.Color.red)
+                embed=discord.Embed(
+                    description=f"{interaction.user.mention}\n{interaction.channel.name}",
+                    color=discord.Color.red
+                )
             )
         await interaction.response.send_message("削除します", ephemeral=True)
         await interaction.channel.delete()
@@ -112,7 +118,10 @@ class TicketView(discord.ui.View):
 
         if log_channel:
             await log_channel.send(
-                embed=discord.Embed(description=f"{user.mention}\n{channel.mention}", color=discord.Color.green())
+                embed=discord.Embed(
+                    description=f"{user.mention}\n{channel.mention}",
+                    color=discord.Color.green()
+                )
             )
 
         await interaction.response.send_message(f"{channel.mention} を作成しました", ephemeral=True)
@@ -147,7 +156,7 @@ async def on_ready():
     print("BOT READY")
 
 # =====================
-# 起動
+# Bot起動
 # =====================
 if __name__ == "__main__":
     asyncio.run(bot.start(TOKEN))
