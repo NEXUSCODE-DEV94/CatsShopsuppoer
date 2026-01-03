@@ -14,6 +14,10 @@ YUZU_TICKET_CATEGORY_ID = 1455540840708702300
 DONE_CATEGORY_ID = 1456845967545471157
 LOG_CHANNEL_ID = 1313099999537532928
 
+VERIFY_ROLE_ID = 1313100654507458561
+EMOJI_ID = 1450459063052927079
+IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
+
 TICKET_CUSTOM_ID = "ticket_open_button"
 YUZU_TICKET_CUSTOM_ID = "yuzu_ticket_open_button"
 
@@ -199,6 +203,60 @@ async def yuzu_ticket(
 
     await interaction.channel.send(embed=embed, view=view)
     await interaction.response.send_message("設置完了", ephemeral=True)
+# --
+class VerifyView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)  # 永続
+
+    @discord.ui.button(
+        label="Verify",
+        style=discord.ButtonStyle.success,
+        custom_id="verify_button",
+        emoji=discord.PartialEmoji(id=EMOJI_ID)
+    )
+    async def verify_button(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        role = interaction.guild.get_role(VERIFY_ROLE_ID)
+
+        if role is None:
+            await interaction.response.send_message(
+                "ロールが見つかりません。",
+                ephemeral=True
+            )
+            return
+
+        if role in interaction.user.roles:
+            await interaction.response.send_message(
+                "すでに認証済みです。",
+                ephemeral=True
+            )
+            return
+
+        await interaction.user.add_roles(role)
+        await interaction.response.send_message(
+            "認証が完了しました",
+            ephemeral=True
+        )
+
+
+# ===== /verify コマンド =====
+@bot.tree.command(name="verify", description="認証パネルを送信")
+@app_commands.checks.has_permissions(administrator=True)
+async def verify(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="Verification",
+        description="下のボタンを押して認証してください。",
+        color=discord.Color.green()
+    )
+    embed.set_image(url=IMAGE_URL)
+
+    await interaction.response.send_message(
+        embed=embed,
+        view=VerifyView()
+    )
 
 @bot.event
 async def on_ready():
@@ -221,3 +279,4 @@ async def start_web_and_bot():
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
+
