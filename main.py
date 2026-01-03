@@ -58,7 +58,7 @@ class AdminPanelView(discord.ui.View):
 
         await interaction.response.send_message("対応済みにしました", ephemeral=True)
 
-    @discord.ui.button(label="チケット削除", style=discord.ButtonStyle.red, custom_id="ticket_delete")
+    @discord.ui.button(label="チケット削除", style=discord.ButtonStyle.secondary, custom_id="ticket_delete")
     async def delete(self, interaction: discord.Interaction, button: discord.ui.Button):
         log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
         if log_channel:
@@ -81,7 +81,7 @@ class BaseTicketView(discord.ui.View):
         self.add_item(
             discord.ui.Button(
                 label=button_label,
-                style=discord.ButtonStyle.green,
+                style=discord.ButtonStyle.secondary,
                 custom_id=custom_id
             )
         )
@@ -159,7 +159,7 @@ async def ticket(
             "> リンク送信禁止\n"
             "> 迷惑行為禁止"
         ),
-        color=discord.Color.blurple()
+    color=discord.Color.dark_grey()
     )
 
     if image_url:
@@ -185,7 +185,7 @@ async def yuzu_ticket(
             "> 要望の動画1つにつき ¥10\n"
             "> 要望の写真1つにつき ¥5"
         ),
-        color=discord.Color.orange()
+    color=discord.Color.dark_grey()
     )
 
     if image_url:
@@ -221,4 +221,5 @@ async def start_web_and_bot():
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
+
 
