@@ -15,7 +15,7 @@ DONE_CATEGORY_ID = 1456845967545471157
 LOG_CHANNEL_ID = 1313099999537532928
 
 VERIFY_ROLE_ID = 1313100654507458561
-EMOJI_ID = 1450459063052927079
+EMOJI_ID = "<a:verify:1450459063052927079>"
 IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 
 TICKET_CUSTOM_ID = "ticket_open_button"
@@ -279,4 +279,5 @@ async def start_web_and_bot():
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
+
 
