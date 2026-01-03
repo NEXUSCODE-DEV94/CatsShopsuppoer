@@ -65,7 +65,7 @@ class TicketView(ui.View):
 
 class TicketDeleteButton(ui.Button):
     def __init__(self):
-        super().__init__(style=discord.ButtonStyle.danger, label="チケットを削除")
+        super().__init__(style=discord.ButtonStyle.red, label="チケットを削除")
 
     async def callback(self, interaction: Interaction):
         await interaction.channel.delete()
@@ -181,7 +181,8 @@ class YuzuTicketView(ui.View):
         channel = await category.create_text_channel(ch_name, overwrites=overwrites)
 
         embed = discord.Embed(
-            description=f"{user.mention}\n\nこのチャンネルで内容を送信してください。",
+            title=f"{self.user.name}のTicket | {self.values[0]}",
+            description=f"管理者の対応をお待ちください。\n※対応が遅れる場合があります",
             color=discord.Color.green()
         )
 
@@ -250,3 +251,4 @@ async def start_web_and_bot():
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
+
