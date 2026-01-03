@@ -192,7 +192,7 @@ async def yuzu_ticket(
         embed.set_image(url=image_url)
 
     view = BaseTicketView(
-        "OPEN",
+        "チケットを作成",
         YUZU_TICKET_CATEGORY_ID,
         YUZU_TICKET_CUSTOM_ID
     )
@@ -221,5 +221,3 @@ async def start_web_and_bot():
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
-
-
