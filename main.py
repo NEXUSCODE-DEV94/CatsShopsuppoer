@@ -153,7 +153,12 @@ async def ticket(
     image_url: Optional[str] = None
 ):
     embed = discord.Embed(
-        description="__Ticket Panel__",
+        description=(
+            "## __Ticket Panel__\n"
+            "> 購入：お問い合わせ\n"
+            "> リンク送信禁止\n"
+            "> 迷惑行為禁止"
+        ),
         color=discord.Color.blurple()
     )
 
@@ -161,28 +166,37 @@ async def ticket(
         embed.set_image(url=image_url)
 
     view = BaseTicketView(button_name, TICKET_CATEGORY_ID, TICKET_CUSTOM_ID)
+
     await interaction.channel.send(embed=embed, view=view)
     await interaction.response.send_message("設置完了", ephemeral=True)
 
 @bot.tree.command(name="yuzu_ticket", description="YUZU専用チケットパネルを設置")
 @app_commands.describe(
-    description="埋め込み説明文",
     image_url="画像URL"
 )
 async def yuzu_ticket(
     interaction: discord.Interaction,
-    description: str,
     image_url: Optional[str] = None
 ):
     embed = discord.Embed(
-        description=description,
+        description=(
+            "## 🔞 r18用要望 / チケット\n\n"
+            "> 支払い方法: PayPay, Kyash\n\n"
+            "> 要望の動画1つにつき ¥10\n"
+            "> 要望の写真1つにつき ¥5"
+        ),
         color=discord.Color.orange()
     )
 
     if image_url:
         embed.set_image(url=image_url)
 
-    view = BaseTicketView("OPEN", YUZU_TICKET_CATEGORY_ID, YUZU_TICKET_CUSTOM_ID)
+    view = BaseTicketView(
+        "OPEN",
+        YUZU_TICKET_CATEGORY_ID,
+        YUZU_TICKET_CUSTOM_ID
+    )
+
     await interaction.channel.send(embed=embed, view=view)
     await interaction.response.send_message("設置完了", ephemeral=True)
 
@@ -207,3 +221,4 @@ async def start_web_and_bot():
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
+
