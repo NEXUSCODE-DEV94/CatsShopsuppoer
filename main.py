@@ -89,6 +89,16 @@ class TicketSelect(ui.Select):
     async def callback(self, interaction: Interaction):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
 
+        # ===== 二重作成防止 =====
+        for ch in category.text_channels:
+            if ch.name == f"🎫｜{self.user.name}":
+                await interaction.response.send_message(
+                    f"すでにチケットがあります → {ch.mention}",
+                    ephemeral=True
+                )
+                return
+        # =======================
+
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             self.user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
@@ -98,7 +108,10 @@ class TicketSelect(ui.Select):
             if role:
                 overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
-        ch = await category.create_text_channel(f"🎫｜{self.user.name}", overwrites=overwrites)
+        ch = await category.create_text_channel(
+            f"🎫｜{self.user.name}",
+            overwrites=overwrites
+        )
 
         embed = discord.Embed(
             title=f"Ticket | {self.user.name}",
@@ -115,9 +128,11 @@ class TicketPanel(ui.View):
 
     @ui.button(label="チケットを作成", style=discord.ButtonStyle.secondary, custom_id="create_ticket")
     async def create(self, interaction: Interaction, button: ui.Button):
+        view = ui.View()
+        view.add_item(TicketSelect(interaction.user))
         await interaction.response.send_message(
             "チケットの種類を選択してください",
-            view=ui.View().add_item(TicketSelect(interaction.user)),
+            view=view,
             ephemeral=True
         )
 
@@ -131,6 +146,16 @@ class YuzuTicketView(ui.View):
         user = interaction.user
         category = interaction.guild.get_channel(YUZU_TICKET_CATEGORY_ID)
 
+        # ===== 二重作成防止 =====
+        for ch in category.text_channels:
+            if ch.name == f"🎫｜{user.name}":
+                await interaction.response.send_message(
+                    f"すでにチケットがあります → {ch.mention}",
+                    ephemeral=True
+                )
+                return
+        # =======================
+
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
@@ -140,7 +165,10 @@ class YuzuTicketView(ui.View):
             if role:
                 overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
-        ch = await category.create_text_channel(f"🎫｜{user.name}", overwrites=overwrites)
+        ch = await category.create_text_channel(
+            f"🎫｜{user.name}",
+            overwrites=overwrites
+        )
 
         embed = discord.Embed(
             title=f"R18 Ticket | {user.name}",
@@ -154,7 +182,6 @@ class YuzuTicketView(ui.View):
 # ================= コマンド =================
 @bot.tree.command(name="verify")
 async def verify(interaction: Interaction):
-    await interaction.response.send_message("設置完了", ephemeral=True)
     embed = discord.Embed(
         title="Verification",
         description="下のボタンを押して認証してください。",
@@ -162,6 +189,7 @@ async def verify(interaction: Interaction):
     )
     embed.set_image(url=IMAGE_URL)
     await interaction.channel.send(embed=embed, view=VerifyView())
+    await interaction.response.send_message("設置完了", ephemeral=True)
 
 @bot.tree.command(name="ticket_panel")
 async def ticket_panel(interaction: Interaction):
@@ -195,9 +223,11 @@ async def start():
     app.router.add_get("/", lambda r: web.Response(text="ok"))
     runner = web.AppRunner(app)
     await runner.setup()
-    await web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 10000))).start()
+    await web.TCPSite(
+        runner,
+        "0.0.0.0",
+        int(os.environ.get("PORT", 10000))
+    ).start()
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
