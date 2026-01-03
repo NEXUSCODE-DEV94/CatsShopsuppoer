@@ -6,11 +6,11 @@ from typing import Optional
 from aiohttp import web
 from discord import app_commands
 
+# ================= 設定 =================
 ADMIN_ROLE_ID = [1313086280141373441, 1452291945413083247]
 
 TICKET_CATEGORY_ID = 1450086411956129894
 YUZU_TICKET_CATEGORY_ID = 1455540840708702300
-
 DONE_CATEGORY_ID = 1456845967545471157
 LOG_CHANNEL_ID = 1313099999537532928
 
@@ -20,17 +20,20 @@ IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 
 TICKET_CUSTOM_ID = "ticket_open_button"
 YUZU_TICKET_CUSTOM_ID = "yuzu_ticket_open_button"
+# =======================================
 
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
 intents.message_content = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 TOKEN = os.environ.get("DISCORD_TOKEN")
 if not TOKEN:
     raise RuntimeError("DISCORD_TOKEN が設定されていません")
 
+# ================= 管理用 View =================
 class AdminPanelView(discord.ui.View):
     def __init__(self, owner_id: int):
         super().__init__(timeout=None)
@@ -44,14 +47,15 @@ class AdminPanelView(discord.ui.View):
         guild = interaction.guild
         channel = interaction.channel
         owner = guild.get_member(self.owner_id)
-        done_category = guild.get_channel(DONE_CATEGORY_ID)
-        log_channel = guild.get_channel(LOG_CHANNEL_ID)
 
         if owner:
             await channel.set_permissions(owner, send_messages=False)
+
+        done_category = guild.get_channel(DONE_CATEGORY_ID)
         if done_category:
             await channel.edit(category=done_category)
 
+        log_channel = guild.get_channel(LOG_CHANNEL_ID)
         if log_channel:
             await log_channel.send(
                 embed=discord.Embed(
@@ -72,15 +76,14 @@ class AdminPanelView(discord.ui.View):
                     color=discord.Color.red()
                 )
             )
+
         await interaction.response.send_message("削除します", ephemeral=True)
         await interaction.channel.delete()
 
+# ================= チケット View =================
 class BaseTicketView(discord.ui.View):
-    def __init__(self, button_label: str, category_id: int, custom_id: str):
+    def __init__(self, button_label: str, custom_id: str):
         super().__init__(timeout=None)
-        self.button_label = button_label
-        self.category_id = category_id
-        self.custom_id = custom_id
 
         self.add_item(
             discord.ui.Button(
@@ -90,38 +93,60 @@ class BaseTicketView(discord.ui.View):
             )
         )
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        return True
+# ================= 認証 View =================
+class VerifyView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
 
+    @discord.ui.button(
+        label="Verify",
+        style=discord.ButtonStyle.primary,
+        custom_id="verify_button",
+        emoji=EMOJI_ID
+    )
+    async def verify_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        role = interaction.guild.get_role(VERIFY_ROLE_ID)
+
+        if role is None:
+            await interaction.response.send_message("ロールが見つかりません。", ephemeral=True)
+            return
+
+        if role in interaction.user.roles:
+            await interaction.response.send_message("すでに認証済みです。", ephemeral=True)
+            return
+
+        await interaction.user.add_roles(role)
+        await interaction.response.send_message("認証が完了しました", ephemeral=True)
+
+# ================= チケット作成処理 =================
 @bot.event
 async def on_interaction(interaction: discord.Interaction):
-    if not interaction.type == discord.InteractionType.component:
+    if interaction.type != discord.InteractionType.component:
         return
 
-    if interaction.data.get("custom_id") not in [TICKET_CUSTOM_ID, YUZU_TICKET_CUSTOM_ID]:
+    cid = interaction.data.get("custom_id")
+    if cid not in [TICKET_CUSTOM_ID, YUZU_TICKET_CUSTOM_ID]:
         return
 
     guild = interaction.guild
     user = interaction.user
-    custom_id = interaction.data["custom_id"]
 
-    category_id = TICKET_CATEGORY_ID if custom_id == TICKET_CUSTOM_ID else YUZU_TICKET_CATEGORY_ID
+    category_id = TICKET_CATEGORY_ID if cid == TICKET_CUSTOM_ID else YUZU_TICKET_CATEGORY_ID
     category = guild.get_channel(category_id)
-    log_channel = guild.get_channel(LOG_CHANNEL_ID)
 
     if not category:
         await interaction.response.send_message("カテゴリが見つかりません", ephemeral=True)
         return
-
-    admin_roles = [guild.get_role(rid) for rid in ADMIN_ROLE_ID if guild.get_role(rid)]
 
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(view_channel=False),
         user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
     }
 
-    for role in admin_roles:
-        overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+    for rid in ADMIN_ROLE_ID:
+        role = guild.get_role(rid)
+        if role:
+            overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
     channel = await guild.create_text_channel(
         f"🎫¦{user.name}",
@@ -129,139 +154,41 @@ async def on_interaction(interaction: discord.Interaction):
         overwrites=overwrites
     )
 
-    embed = discord.Embed(
-        description=f"{user.mention}\n\nこのチャンネルで内容を送信してください。",
-        color=discord.Color.green()
+    await channel.send(
+        embed=discord.Embed(
+            description=f"{user.mention}\n\nこのチャンネルで内容を送信してください。",
+            color=discord.Color.green()
+        ),
+        view=AdminPanelView(user.id)
     )
-
-    await channel.send(embed=embed, view=AdminPanelView(user.id))
-
-    if log_channel:
-        await log_channel.send(
-            embed=discord.Embed(
-                description=f"{user.mention}\n{channel.mention}",
-                color=discord.Color.green()
-            )
-        )
 
     await interaction.response.send_message(f"{channel.mention} を作成しました", ephemeral=True)
 
-@bot.tree.command(name="ticket", description="通常チケットパネルを設置")
-@app_commands.describe(
-    button_name="ボタン文字",
-    image_url="画像URL"
-)
-async def ticket(
-    interaction: discord.Interaction,
-    button_name: str,
-    image_url: Optional[str] = None
-):
-    embed = discord.Embed(
-        description=(
-            "## __Ticket Panel__\n"
-            "> 購入：お問い合わせ\n"
-            "> リンク送信禁止\n"
-            "> 迷惑行為禁止"
-        ),
-    color=discord.Color.dark_grey()
-    )
-
-    if image_url:
-        embed.set_image(url=image_url)
-
-    view = BaseTicketView(button_name, TICKET_CATEGORY_ID, TICKET_CUSTOM_ID)
-
-    await interaction.channel.send(embed=embed, view=view)
-    await interaction.response.send_message("設置完了", ephemeral=True)
-
-@bot.tree.command(name="yuzu_ticket", description="YUZU専用チケットパネルを設置")
-@app_commands.describe(
-    image_url="画像URL"
-)
-async def yuzu_ticket(
-    interaction: discord.Interaction,
-    image_url: Optional[str] = None
-):
-    embed = discord.Embed(
-        description=(
-            "## 🔞 r18用要望 / チケット\n\n"
-            "> 支払い方法: PayPay, Kyash\n\n"
-            "> 要望の動画1つにつき ¥10\n"
-            "> 要望の写真1つにつき ¥5"
-        ),
-    color=discord.Color.dark_grey()
-    )
-
-    if image_url:
-        embed.set_image(url=image_url)
-
-    view = BaseTicketView(
-        "チケットを作成",
-        YUZU_TICKET_CATEGORY_ID,
-        YUZU_TICKET_CUSTOM_ID
-    )
-
-    await interaction.channel.send(embed=embed, view=view)
-    await interaction.response.send_message("設置完了", ephemeral=True)
-# --
-class VerifyView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)  # 永続
-
-    @discord.ui.button(
-        label="Verify",
-        style=discord.ButtonStyle.primary,
-        custom_id="verify_button",
-        emoji=EMOJI_ID  
-    )
-    async def verify_button(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button
-    ):
-        role = interaction.guild.get_role(VERIFY_ROLE_ID)
-
-        if role is None:
-            await interaction.response.send_message(
-                "ロールが見つかりません。",
-                ephemeral=True
-            )
-            return
-
-        if role in interaction.user.roles:
-            await interaction.response.send_message(
-                "すでに認証済みです。",
-                ephemeral=True
-            )
-            return
-
-        await interaction.user.add_roles(role)
-        await interaction.response.send_message(
-            "認証が完了しました",
-            ephemeral=True
-        )
-
-
-# ===== /verify コマンド =====
+# ================= コマンド =================
 @bot.tree.command(name="verify", description="認証パネルを送信")
 @app_commands.checks.has_permissions(administrator=True)
 async def verify(interaction: discord.Interaction):
+    print(f"[VERIFY] 設置実行: {interaction.user} ({interaction.user.id})")
+
+    await interaction.response.send_message("設置完了", ephemeral=True)
+
     embed = discord.Embed(
         title="Verification",
         description="下のボタンを押して認証してください。",
-        color=discord.Color.primary()
+        color=discord.Color.blue()
     )
     embed.set_image(url=IMAGE_URL)
 
-    await interaction.response.send_message(
-        embed=embed,
-        view=VerifyView()
-    )
+    await interaction.channel.send(embed=embed, view=VerifyView())
 
+# ================= 起動 =================
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
+    bot.add_view(VerifyView())
+    bot.add_view(BaseTicketView("dummy", TICKET_CUSTOM_ID))
+    bot.add_view(BaseTicketView("dummy", YUZU_TICKET_CUSTOM_ID))
     print("BOT READY")
+    await bot.tree.sync()
 
 async def start_web_and_bot():
     async def handle(request):
@@ -269,17 +196,13 @@ async def start_web_and_bot():
 
     app = web.Application()
     app.router.add_get("/", handle)
+
     port = int(os.environ.get("PORT", 10000))
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
+    await web.TCPSite(runner, "0.0.0.0", port).start()
 
     await bot.start(TOKEN)
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
-
-
-
-
