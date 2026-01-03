@@ -212,7 +212,7 @@ class VerifyView(discord.ui.View):
         label="Verify",
         style=discord.ButtonStyle.success,
         custom_id="verify_button",
-        emoji=discord.PartialEmoji(id=EMOJI_ID)
+        emoji=EMOJI_ID  
     )
     async def verify_button(
         self,
@@ -279,5 +279,6 @@ async def start_web_and_bot():
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
+
 
 
