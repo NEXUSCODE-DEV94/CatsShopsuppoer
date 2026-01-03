@@ -175,7 +175,7 @@ async def ticket_panel(interaction: Interaction):
 @bot.tree.command(name="yuzu_ticket_panel")
 async def yuzu_panel(interaction: Interaction):
     embed = discord.Embed(
-        description="## 🔞 r18用要望 / チケット\n> 支払い方法: PayPay, Kyash\n> 動画 ¥10 / 写真 ¥5",
+        description="## R18用要望 / チケット\n> 支払い方法: PayPay, Kyash\n> 動画 ¥10 / 写真 ¥5",
         color=discord.Color.dark_grey()
     )
     await interaction.channel.send(embed=embed, view=YuzuTicketView())
@@ -199,4 +199,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
