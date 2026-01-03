@@ -101,7 +101,7 @@ class TicketSelect(ui.Select):
         ch = await category.create_text_channel(f"🎫｜{self.user.name}", overwrites=overwrites)
 
         embed = discord.Embed(
-            title=f"🎫 Ticket | {self.user.name}",
+            title=f"Ticket | {self.user.name}",
             description=f"**種別:** {self.values[0]}\n管理者の対応をお待ちください。",
             color=discord.Color.blue()
         )
@@ -143,7 +143,7 @@ class YuzuTicketView(ui.View):
         ch = await category.create_text_channel(f"🎫｜{user.name}", overwrites=overwrites)
 
         embed = discord.Embed(
-            title=f"🎫 YUZU Ticket | {user.name}",
+            title=f"R18 Ticket | {user.name}",
             description="管理者の対応をお待ちください。",
             color=discord.Color.purple()
         )
@@ -199,3 +199,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
