@@ -76,18 +76,16 @@ class AdminPanelView(discord.ui.View):
                     color=discord.Color.red()
                 )
             )
-
         await interaction.response.send_message("削除します", ephemeral=True)
         await interaction.channel.delete()
 
 # ================= チケット View =================
 class BaseTicketView(discord.ui.View):
-    def __init__(self, button_label: str, custom_id: str):
+    def __init__(self, label: str, custom_id: str):
         super().__init__(timeout=None)
-
         self.add_item(
             discord.ui.Button(
-                label=button_label,
+                label=label,
                 style=discord.ButtonStyle.secondary,
                 custom_id=custom_id
             )
@@ -130,7 +128,6 @@ async def on_interaction(interaction: discord.Interaction):
 
     guild = interaction.guild
     user = interaction.user
-
     category_id = TICKET_CATEGORY_ID if cid == TICKET_CUSTOM_ID else YUZU_TICKET_CATEGORY_ID
     category = guild.get_channel(category_id)
 
@@ -165,11 +162,11 @@ async def on_interaction(interaction: discord.Interaction):
     await interaction.response.send_message(f"{channel.mention} を作成しました", ephemeral=True)
 
 # ================= コマンド =================
+
 @bot.tree.command(name="verify", description="認証パネルを送信")
 @app_commands.checks.has_permissions(administrator=True)
 async def verify(interaction: discord.Interaction):
     print(f"[VERIFY] 設置実行: {interaction.user} ({interaction.user.id})")
-
     await interaction.response.send_message("設置完了", ephemeral=True)
 
     embed = discord.Embed(
@@ -181,14 +178,44 @@ async def verify(interaction: discord.Interaction):
 
     await interaction.channel.send(embed=embed, view=VerifyView())
 
+@bot.tree.command(name="ticket_panel", description="通常チケットパネルを設置")
+async def ticket_panel(interaction: discord.Interaction):
+    embed = discord.Embed(
+        description="## __Ticket Panel__\n> 購入：お問い合わせ\n> 迷惑行為禁止",
+        color=discord.Color.dark_grey()
+    )
+
+    await interaction.channel.send(
+        embed=embed,
+        view=BaseTicketView("チケットを作成", TICKET_CUSTOM_ID)
+    )
+    await interaction.response.send_message("設置完了", ephemeral=True)
+
+@bot.tree.command(name="yuzu_ticket_panel", description="YUZU専用チケットパネルを設置")
+async def yuzu_ticket_panel(interaction: discord.Interaction):
+    embed = discord.Embed(
+        description=(
+            "## 🔞 r18用要望 / チケット\n\n"
+            "> 支払い方法: PayPay, Kyash\n"
+            "> 動画 ¥10 / 写真 ¥5"
+        ),
+        color=discord.Color.dark_grey()
+    )
+
+    await interaction.channel.send(
+        embed=embed,
+        view=BaseTicketView("チケットを作成", YUZU_TICKET_CUSTOM_ID)
+    )
+    await interaction.response.send_message("設置完了", ephemeral=True)
+
 # ================= 起動 =================
 @bot.event
 async def on_ready():
     bot.add_view(VerifyView())
     bot.add_view(BaseTicketView("dummy", TICKET_CUSTOM_ID))
     bot.add_view(BaseTicketView("dummy", YUZU_TICKET_CUSTOM_ID))
-    print("BOT READY")
     await bot.tree.sync()
+    print("BOT READY")
 
 async def start_web_and_bot():
     async def handle(request):
@@ -196,7 +223,6 @@ async def start_web_and_bot():
 
     app = web.Application()
     app.router.add_get("/", handle)
-
     port = int(os.environ.get("PORT", 10000))
     runner = web.AppRunner(app)
     await runner.setup()
