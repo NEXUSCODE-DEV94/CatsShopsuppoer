@@ -210,7 +210,7 @@ class VerifyView(discord.ui.View):
 
     @discord.ui.button(
         label="Verify",
-        style=discord.ButtonStyle.success,
+        style=discord.ButtonStyle.primary,
         custom_id="verify_button",
         emoji=EMOJI_ID  
     )
@@ -249,7 +249,7 @@ async def verify(interaction: discord.Interaction):
     embed = discord.Embed(
         title="Verification",
         description="下のボタンを押して認証してください。",
-        color=discord.Color.green()
+        color=discord.Color.primary()
     )
     embed.set_image(url=IMAGE_URL)
 
@@ -279,6 +279,7 @@ async def start_web_and_bot():
 
 if __name__ == "__main__":
     asyncio.run(start_web_and_bot())
+
 
 
 
