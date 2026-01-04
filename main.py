@@ -6,6 +6,7 @@ from discord import app_commands, ui, Interaction
 from aiohttp import web
 from datetime import datetime, timezone, timedelta
 import re
+import random
 
 # ================= 設定 =================
 ADMIN_ROLE_ID = [1313086280141373441, 1452291945413083247]
@@ -19,6 +20,14 @@ VERIFY_ROLE_ID = 1313100654507458561
 EMOJI_ID = "<a:verify:1450459063052927079>"
 IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 # =======================================
+
+NUKE_GIFS = [
+    "https://i.pinimg.com/originals/3a/e7/92/3ae792706e97941696b70b4763bd2963.gif",
+    "https://i.pinimg.com/originals/08/b4/f3/08b4f35b31e0ea0948ca7b5778e32b54.gif",
+    "https://i.pinimg.com/originals/58/70/72/587072da657dcee567164c2ff718e08e.gif",
+    "https://i.pinimg.com/originals/b0/45/fc/b045fc647b6a4a4bc2dd3d31f4a948ef.gif",
+    "https://i.pinimg.com/originals/6a/8e/4d/6a8e4d2b450f10d3733422efc4e95526.gif",
+]
 
 PATTERN_NORMAL = re.compile(r"^(.+?)・(.+)$")
 
@@ -327,6 +336,52 @@ async def name_change_2(interaction: discord.Interaction):
         f"復元完了：{changed} チャンネル",
         ephemeral=True
     )
+# ---------nukke------
+@bot.tree.command(name="nuke", description="チャンネルを再生成するこまんど")
+@app_commands.checks.has_permissions(manage_channels=True)
+async def nuke(interaction: discord.Interaction):
+    channel = interaction.channel
+
+    if not isinstance(channel, discord.TextChannel):
+        await interaction.response.send_message(
+            "このコマンドはテキストチャンネルでのみ使用できます。",
+            ephemeral=True
+        )
+        return
+
+    await interaction.response.defer(ephemeral=True)
+
+    guild = interaction.guild
+    old_position = channel.position
+    old_category = channel.category
+）
+    new_channel = await channel.clone(
+        reason=f"Nuked by {interaction.user}",
+        category=old_category
+    )
+
+    await new_channel.edit(position=old_position)
+
+    await channel.delete(reason=f"Nuked by {interaction.user}")
+
+    embed = discord.Embed(
+        title="💥 Nuke",
+        description="チャンネルを再生成しました。",
+        color=discord.Color.red()
+    )
+    embed.set_image(url=random.choice(NUKE_GIFS))
+
+    await new_channel.send(embed=embed)
+
+@bot.event
+async def on_app_command_error(interaction: discord.Interaction, error):
+    if isinstance(error, app_commands.errors.MissingPermissions):
+        await interaction.response.send_message(
+            "権限がありません。（チャンネル管理が必要）",
+            ephemeral=True
+        )
+    else:
+        raise error
 # ================= 起動 =================
 @bot.event
 async def on_ready():
@@ -349,6 +404,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
-
