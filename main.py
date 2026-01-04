@@ -217,8 +217,6 @@ async def embed(
     description: str,
     view_dev: str
 ):
-    await interaction.response.defer(ephemeral=True)
-
     try:
         desc = description.replace("\\n", "\n")
 
@@ -238,19 +236,28 @@ async def embed(
                 icon_url=interaction.user.display_avatar.url
             )
 
-        await interaction.followup.send(embed=embed)
+        await interaction.response.send_message(
+            "送信完了！！",
+            ephemeral=True
+        )
 
-        await interaction.followup.send("送信完了！！", ephemeral=True)
+        await interaction.followup.send(embed=embed)
 
     except Exception as e:
         error_text = str(e)
         if len(error_text) > 1800:
             error_text = error_text[:1800] + "…"
 
-        await interaction.followup.send(
-            f"エラーが発生しました\n```{error_text}```",
-            ephemeral=True
-        )
+        if not interaction.response.is_done():
+            await interaction.response.send_message(
+                f"エラーが発生しました\n```{error_text}```",
+                ephemeral=True
+            )
+        else:
+            await interaction.followup.send(
+                f"エラーが発生しました\n```{error_text}```",
+                ephemeral=True
+            )
 # ================= 起動 =================
 @bot.event
 async def on_ready():
@@ -273,5 +280,6 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
