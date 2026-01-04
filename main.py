@@ -218,6 +218,7 @@ async def embed(
     view_dev: str
 ):
     try:
+        # 改行対応
         desc = description.replace("\\n", "\n")
 
         embed = discord.Embed(
@@ -226,6 +227,7 @@ async def embed(
             color=discord.Color.dark_grey()
         )
 
+        # JST 時刻
         from datetime import datetime, timezone, timedelta
         JST = timezone(timedelta(hours=9))
         now = datetime.now(JST)
@@ -236,18 +238,21 @@ async def embed(
                 icon_url=interaction.user.display_avatar.url
             )
 
+        # ① 先に送信（ephemeral = True）
         await interaction.response.send_message(
             "送信完了！！",
             ephemeral=True
         )
 
-        await interaction.followup.send(embed=embed)
+        # ② 通常送信（返信ではない）
+        await interaction.channel.send(embed=embed)
 
     except Exception as e:
         error_text = str(e)
         if len(error_text) > 1800:
             error_text = error_text[:1800] + "…"
 
+        # エラーは常に ephemeral
         if not interaction.response.is_done():
             await interaction.response.send_message(
                 f"エラーが発生しました\n```{error_text}```",
@@ -280,3 +285,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
