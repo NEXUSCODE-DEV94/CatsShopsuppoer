@@ -270,28 +270,33 @@ async def embed(
             )
 # ================ちゃんねるめいへんこー==========
 # =====================
-@bot.tree.command(name="name-change-1", description="チャンネル名を『絵文字』｜名前 に変更")
-@app_commands.describe(channel="変更するチャンネル")
-async def name_change_1(
-    interaction: discord.Interaction,
-    channel: discord.TextChannel
-):
-    match = PATTERN_NORMAL.match(channel.name)
+@bot.tree.command(
+    name="name-change-1",
+    description="サーバー内の全チャンネルをへんこお"
+)
+async def name_change_1(interaction: discord.Interaction):
+    guild = interaction.guild
+    changed = 0
 
-    if not match:
-        await interaction.response.send_message(
-            "このチャンネル名は `{絵文字}・{チャンネル名}` の形式ではありません。",
-            ephemeral=True
-        )
-        return
+    for channel in guild.text_channels:
+        if "・" not in channel.name:
+            continue
 
-    emoji, name = match.groups()
-    new_name = f"『{emoji}』｜{name}"
+        match = PATTERN_NORMAL.match(channel.name)
+        if not match:
+            continue
 
-    await channel.edit(name=new_name)
+        emoji, name = match.groups()
+        new_name = f"『{emoji}』｜{name}"
+
+        if channel.name == new_name:
+            continue
+
+        await channel.edit(name=new_name)
+        changed += 1
 
     await interaction.response.send_message(
-        f"変更完了: `{channel.name}` → `{new_name}`",
+        f"変更完了：{changed} チャンネル",
         ephemeral=True
     )
 
@@ -299,28 +304,27 @@ async def name_change_1(
 # =====================
 # /name-change-2
 # =====================
-@bot.tree.command(name="name-change-2", description="チャンネル名を元の {絵文字}・名前 に戻す")
-@app_commands.describe(channel="戻すチャンネル")
-async def name_change_2(
-    interaction: discord.Interaction,
-    channel: discord.TextChannel
-):
-    match = PATTERN_QUOTED.match(channel.name)
+@bot.tree.command(
+    name="name-change-2",
+    description="サーバー内の全チャンネル名を元に戻す"
+)
+async def name_change_2(interaction: discord.Interaction):
+    guild = interaction.guild
+    changed = 0
 
-    if not match:
-        await interaction.response.send_message(
-            "このチャンネル名は `『絵文字』｜チャンネル名` の形式ではありません。",
-            ephemeral=True
-        )
-        return
+    for channel in guild.text_channels:
+        match = PATTERN_QUOTED.match(channel.name)
+        if not match:
+            continue
 
-    emoji, name = match.groups()
-    new_name = f"{emoji}・{name}"
+        emoji, name = match.groups()
+        new_name = f"{emoji}・{name}"
 
-    await channel.edit(name=new_name)
+        await channel.edit(name=new_name)
+        changed += 1
 
     await interaction.response.send_message(
-        f"復元完了: `{channel.name}` → `{new_name}`",
+        f"復元完了：{changed} チャンネル",
         ephemeral=True
     )
 # ================= 起動 =================
@@ -345,5 +349,6 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
