@@ -377,7 +377,6 @@ class VendingSelect(ui.Select):
 class VendingView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.add_item(ui.Button(label="購入", style=discord.ButtonStyle.green, custom_id="buy_button"))
 
     @ui.button(label="購入", style=discord.ButtonStyle.green, custom_id="buy_button")
     async def buy_button_callback(self, button: ui.Button, interaction: Interaction):
@@ -429,6 +428,7 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
 
