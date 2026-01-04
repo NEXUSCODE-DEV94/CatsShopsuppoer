@@ -20,6 +20,15 @@ VERIFY_ROLE_ID = 1313100654507458561
 EMOJI_ID = "<a:verify:1450459063052927079>"
 IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 # =======================================
+ITEMS = {
+    1: {"name": "aa", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
+    2: {"name": "bb", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
+    3: {"name": "cc", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
+    4: {"name": "dd", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
+}
+
+# 購入ログ送信先
+LOG_CHANNEL_ID = 1457301424017899622
 
 NUKE_GIFS = [
     "https://i.pinimg.com/originals/3a/e7/92/3ae792706e97941696b70b4763bd2963.gif",
@@ -381,6 +390,77 @@ async def on_app_command_error(interaction: discord.Interaction, error):
         )
     else:
         raise error
+# ----venddです^--
+class VendingSelect(ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label=item["name"],
+                description=f"値段: {item['price']}円 | 在庫: {item['stock']}個",
+                value=str(key)
+            ) for key, item in ITEMS.items()
+        ]
+        super().__init__(placeholder="商品を選択してください", min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: Interaction):
+        item_id = int(self.values[0])
+        item = ITEMS[item_id]
+
+        # 特定チャンネルに購入情報送信
+        channel = bot.get_channel(LOG_CHANNEL_ID)
+        embed = discord.Embed(title=f"購入情報: {item['name']}", color=discord.Color.green())
+        embed.add_field(name="商品名", value=item['name'], inline=False)
+        embed.add_field(name="価格", value=f"{item['price']}円", inline=False)
+        embed.add_field(name="購入者", value=interaction.user.mention, inline=False)
+        embed.add_field(name="購入サーバー", value=interaction.guild.name, inline=False)
+        embed.add_field(name="数量", value="1個", inline=False)
+        await channel.send(embed=embed)
+
+        # DM 送信
+        dm_embed = discord.Embed(
+            title="ご購入ありがとうございます",
+            description=f"商品: {item['name']}\n数量: 1\n以下の在庫をお受け取りください:\n{item['url']}",
+            color=discord.Color.blue()
+        )
+        try:
+            await interaction.user.send(embed=dm_embed)
+        except:
+            pass  # DM拒否でも止めない
+
+        await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
+
+class VendingView(ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(ui.Button(label="購入", style=discord.ButtonStyle.green, custom_id="buy_button"))
+
+    @ui.button(label="購入", style=discord.ButtonStyle.green, custom_id="buy_button")
+    async def buy_button(self, button: ui.Button, interaction: Interaction):
+        view = ui.View(timeout=60)
+        view.add_item(VendingSelect())
+        await interaction.response.send_message("下部のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
+
+# ---------------------------
+# /vending-panel コマンド
+# ---------------------------
+@bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
+async def vending_panel(interaction: Interaction):
+    # 最初の ephemeral メッセージ
+    await interaction.response.send_message("設置完了。", ephemeral=True)
+
+    # 埋め込みメッセージ作成
+    embed = discord.Embed(
+        title="無料自販機",
+        description="下記ボタンを押して購入したい商品を選択してください\n\n" +
+                    "\n".join([f"**{item['name']}**\n```値段: {item['price']}円```" for item in ITEMS.values()]),
+        color=discord.Color.green()
+    )
+    embed.set_author(name="自販機パネル", url="https://discords.com/emoji-list")
+    embed.set_footer(text="developer @4bc6")
+
+    # ボタン設置
+    view = VendingView()
+    await interaction.channel.send(embed=embed, view=view)
 # ================= 起動 =================
 @bot.event
 async def on_ready():
@@ -403,6 +483,7 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
 
