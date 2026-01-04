@@ -398,7 +398,7 @@ async def vending_panel(interaction: Interaction):
 
     view = VendingView()
 
-    # ephemeral は使わず、普通に送信
+    # ここで普通のメッセージとして送信（ephemeral は使わない）
     await interaction.response.send_message(embed=embed, view=view)
 
 # ================= 起動 =================
@@ -423,6 +423,7 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
 
