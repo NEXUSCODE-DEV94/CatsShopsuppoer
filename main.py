@@ -354,7 +354,7 @@ async def nuke(interaction: discord.Interaction):
     guild = interaction.guild
     old_position = channel.position
     old_category = channel.category
-)
+    )
     new_channel = await channel.clone(
         reason=f"Nuked by {interaction.user}",
         category=old_category
@@ -404,4 +404,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
