@@ -5,6 +5,7 @@ from discord.ext import commands
 from discord import app_commands, ui, Interaction
 from aiohttp import web
 from datetime import datetime, timezone, timedelta
+import re
 
 # ================= 設定 =================
 ADMIN_ROLE_ID = [1313086280141373441, 1452291945413083247]
@@ -18,6 +19,10 @@ VERIFY_ROLE_ID = 1313100654507458561
 EMOJI_ID = "<a:verify:1450459063052927079>"
 IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 # =======================================
+
+PATTERN_NORMAL = re.compile(r"^(.+?)・(.+)$")
+
+PATTERN_QUOTED = re.compile(r"^『(.+?)』｜(.+)$")
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -263,6 +268,61 @@ async def embed(
                 f"エラーが発生しました\n```{error_text}```",
                 ephemeral=True
             )
+# ================ちゃんねるめいへんこー==========
+# =====================
+@bot.tree.command(name="name-change-1", description="チャンネル名を『絵文字』｜名前 に変更")
+@app_commands.describe(channel="変更するチャンネル")
+async def name_change_1(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel
+):
+    match = PATTERN_NORMAL.match(channel.name)
+
+    if not match:
+        await interaction.response.send_message(
+            "このチャンネル名は `{絵文字}・{チャンネル名}` の形式ではありません。",
+            ephemeral=True
+        )
+        return
+
+    emoji, name = match.groups()
+    new_name = f"『{emoji}』｜{name}"
+
+    await channel.edit(name=new_name)
+
+    await interaction.response.send_message(
+        f"変更完了: `{channel.name}` → `{new_name}`",
+        ephemeral=True
+    )
+
+
+# =====================
+# /name-change-2
+# =====================
+@bot.tree.command(name="name-change-2", description="チャンネル名を元の {絵文字}・名前 に戻す")
+@app_commands.describe(channel="戻すチャンネル")
+async def name_change_2(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel
+):
+    match = PATTERN_QUOTED.match(channel.name)
+
+    if not match:
+        await interaction.response.send_message(
+            "このチャンネル名は `『絵文字』｜チャンネル名` の形式ではありません。",
+            ephemeral=True
+        )
+        return
+
+    emoji, name = match.groups()
+    new_name = f"{emoji}・{name}"
+
+    await channel.edit(name=new_name)
+
+    await interaction.response.send_message(
+        f"復元完了: `{channel.name}` → `{new_name}`",
+        ephemeral=True
+    )
 # ================= 起動 =================
 @bot.event
 async def on_ready():
@@ -285,4 +345,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
