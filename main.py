@@ -369,24 +369,18 @@ class VendingSelect(ui.Select):
             )
             await interaction.user.send(embed=dm_embed)
             await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
-
         except Exception as e:
             await interaction.response.send_message(f"購入処理中にエラーが発生しました\n```{e}```", ephemeral=True)
-
 
 class VendingView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @ui.button(label="購入", style=discord.ButtonStyle.green, custom_id="buy_button")
+    @ui.button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy")
     async def buy_button_callback(self, button: ui.Button, interaction: Interaction):
         view = ui.View(timeout=None)
         view.add_item(VendingSelect())
-        try:
-            await interaction.response.send_message("下記のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
-        except Exception as e:
-            print("VendingView button error:", e)
-
+        await interaction.response.send_message("下記のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
 
 @bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
@@ -400,18 +394,14 @@ async def vending_panel(interaction: Interaction):
     embed.set_footer(text="developer @4bc6")
 
     view = VendingView()
-    try:
-        await interaction.response.send_message(embed=embed, view=view)
-    except Exception as e:
-        print("Vending panel error:", e)
-        if not interaction.response.is_done():
-            await interaction.response.send_message(f"エラーが発生しました\n```{e}```", ephemeral=True)
+    await interaction.response.send_message(embed=embed, view=view)
 # ================= 起動 =================
 @bot.event
 async def on_ready():
     bot.add_view(VerifyView())
     bot.add_view(TicketPanel())
     bot.add_view(YuzuTicketView())
+    bot.add_view(VendingView())
     await bot.tree.sync()
     print("BOT READY")
 
@@ -428,10 +418,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
-
-
-
-
-
