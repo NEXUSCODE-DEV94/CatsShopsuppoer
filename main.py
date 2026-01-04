@@ -385,12 +385,8 @@ class VendingView(ui.View):
         view.add_item(VendingSelect())
         await interaction.response.send_message("下部のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
 
-@bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
+@@bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
-    # ① ephemeral で通知
-    await interaction.response.send_message("設置完了。", ephemeral=True)
-
-    # ② 埋め込みメッセージ作成
     embed = discord.Embed(
         title="無料自販機",
         description="下記ボタンを押して購入したい商品を選択してください\n\n" +
@@ -402,8 +398,8 @@ async def vending_panel(interaction: Interaction):
 
     view = VendingView()
 
-    # ③ followup.send を使って通常メッセージ送信
-    await interaction.followup.send(embed=embed, view=view)
+    # ephemeral は使わず、普通に送信
+    await interaction.response.send_message(embed=embed, view=view)
 
 # ================= 起動 =================
 @bot.event
@@ -427,4 +423,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
