@@ -368,19 +368,30 @@ class VendingSelect(ui.Select):
                 color=discord.Color.blue()
             )
             await interaction.user.send(embed=dm_embed)
+
             await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
+
         except Exception as e:
             await interaction.response.send_message(f"購入処理中にエラーが発生しました\n```{e}```", ephemeral=True)
 
-class VendingView(ui.View):
+
+class VendingPanelView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
+        # ボタン一つだけ追加
+        self.add_item(ui.Button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy_button"))
 
-    @ui.button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy")
+    @ui.button(label="購入（押下用）", style=discord.ButtonStyle.green, custom_id="vending_buy_temp")
     async def buy_button_callback(self, button: ui.Button, interaction: Interaction):
-        view = ui.View(timeout=None)
-        view.add_item(VendingSelect())
-        await interaction.response.send_message("下記のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
+        # ボタン押下時にセレクトメニューを送信
+        select_view = ui.View()
+        select_view.add_item(VendingSelect())
+        await interaction.response.send_message(
+            "下記のセレクトメニューから商品を選択してください。",
+            view=select_view,
+            ephemeral=True
+        )
+
 
 @bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
@@ -393,7 +404,7 @@ async def vending_panel(interaction: Interaction):
     embed.set_author(name="自販機パネル", url="https://discords.com/emoji-list")
     embed.set_footer(text="developer @4bc6")
 
-    view = VendingView()
+    view = VendingPanelView()
     await interaction.response.send_message(embed=embed, view=view)
 # ================= 起動 =================
 @bot.event
@@ -418,3 +429,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
