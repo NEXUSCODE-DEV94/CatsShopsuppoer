@@ -19,7 +19,7 @@ LOG_CHANNEL_ID = 1313099999537532928
 VERIFY_ROLE_ID = 1313100654507458561
 EMOJI_ID = "<a:verify:1450459063052927079>"
 IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
-# =======================================
+
 ITEMS = {
     1: {"name": "aa", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
     2: {"name": "bb", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
@@ -39,7 +39,6 @@ NUKE_GIFS = [
 ]
 
 PATTERN_NORMAL = re.compile(r"^(.+?)・(.+)$")
-
 PATTERN_QUOTED = re.compile(r"^『(.+?)』｜(.+)$")
 
 intents = discord.Intents.default()
@@ -113,7 +112,6 @@ class TicketSelect(ui.Select):
     async def callback(self, interaction: Interaction):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
 
-        # ===== 二重作成防止 =====
         for ch in category.text_channels:
             if ch.name == f"🎫｜{self.user.name}":
                 await interaction.response.send_message(
@@ -121,7 +119,6 @@ class TicketSelect(ui.Select):
                     ephemeral=True
                 )
                 return
-        # =======================
 
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
@@ -170,7 +167,6 @@ class YuzuTicketView(ui.View):
         user = interaction.user
         category = interaction.guild.get_channel(YUZU_TICKET_CATEGORY_ID)
 
-        # ===== 二重作成防止 =====
         for ch in category.text_channels:
             if ch.name == f"🎫｜{user.name}":
                 await interaction.response.send_message(
@@ -178,7 +174,6 @@ class YuzuTicketView(ui.View):
                     ephemeral=True
                 )
                 return
-        # =======================
 
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
@@ -232,7 +227,8 @@ async def yuzu_panel(interaction: Interaction):
     )
     await interaction.channel.send(embed=embed, view=YuzuTicketView())
     await interaction.response.send_message("設置完了", ephemeral=True)
-# ================埋め込み===============
+
+# ================= Embed コマンド =================
 @bot.tree.command(name="embed", description="カスタムEmbedを送信します")
 async def embed(
     interaction: discord.Interaction,
@@ -241,17 +237,13 @@ async def embed(
     view_dev: str
 ):
     try:
-        # 改行対応
         desc = description.replace("\\n", "\n")
-
         embed = discord.Embed(
             title=title if title else None,
             description=desc,
             color=discord.Color.dark_grey()
         )
 
-        # JST 時刻
-        from datetime import datetime, timezone, timedelta
         JST = timezone(timedelta(hours=9))
         now = datetime.now(JST)
 
@@ -261,21 +253,13 @@ async def embed(
                 icon_url=interaction.user.display_avatar.url
             )
 
-        # ① 先に送信（ephemeral = True）
-        await interaction.response.send_message(
-            "送信完了！！",
-            ephemeral=True
-        )
-
-        # ② 通常送信（返信ではない）
+        await interaction.response.send_message("送信完了！！", ephemeral=True)
         await interaction.channel.send(embed=embed)
 
     except Exception as e:
         error_text = str(e)
         if len(error_text) > 1800:
             error_text = error_text[:1800] + "…"
-
-        # エラーは常に ephemeral
         if not interaction.response.is_done():
             await interaction.response.send_message(
                 f"エラーが発生しました\n```{error_text}```",
@@ -286,12 +270,9 @@ async def embed(
                 f"エラーが発生しました\n```{error_text}```",
                 ephemeral=True
             )
-# ================ちゃんねるめいへんこー==========
-# =====================
-@bot.tree.command(
-    name="name-change-1",
-    description="サーバー内の全チャンネルをへんこお"
-)
+
+# ================= チャンネル名変更 =================
+@bot.tree.command(name="name-change-1", description="サーバー内の全チャンネルを変更")
 async def name_change_1(interaction: discord.Interaction):
     guild = interaction.guild
     changed = 0
@@ -299,33 +280,19 @@ async def name_change_1(interaction: discord.Interaction):
     for channel in guild.text_channels:
         if "・" not in channel.name:
             continue
-
         match = PATTERN_NORMAL.match(channel.name)
         if not match:
             continue
-
         emoji, name = match.groups()
         new_name = f"『{emoji}』｜{name}"
-
         if channel.name == new_name:
             continue
-
         await channel.edit(name=new_name)
         changed += 1
 
-    await interaction.response.send_message(
-        f"変更完了：{changed} チャンネル",
-        ephemeral=True
-    )
+    await interaction.response.send_message(f"変更完了：{changed} チャンネル", ephemeral=True)
 
-
-# =====================
-# /name-change-2
-# =====================
-@bot.tree.command(
-    name="name-change-2",
-    description="サーバー内の全チャンネル名を元に戻す"
-)
+@bot.tree.command(name="name-change-2", description="サーバー内の全チャンネル名を元に戻す")
 async def name_change_2(interaction: discord.Interaction):
     guild = interaction.guild
     changed = 0
@@ -334,28 +301,20 @@ async def name_change_2(interaction: discord.Interaction):
         match = PATTERN_QUOTED.match(channel.name)
         if not match:
             continue
-
         emoji, name = match.groups()
         new_name = f"{emoji}・{name}"
-
         await channel.edit(name=new_name)
         changed += 1
 
-    await interaction.response.send_message(
-        f"復元完了：{changed} チャンネル",
-        ephemeral=True
-    )
-# ---------nukke------
-@bot.tree.command(name="nuke", description="チャンネルを再生成するこまんど")
+    await interaction.response.send_message(f"復元完了：{changed} チャンネル", ephemeral=True)
+
+# ================= Nuke =================
+@bot.tree.command(name="nuke", description="チャンネルを再生成するコマンド")
 @app_commands.checks.has_permissions(manage_channels=True)
 async def nuke(interaction: discord.Interaction):
     channel = interaction.channel
-
     if not isinstance(channel, discord.TextChannel):
-        await interaction.response.send_message(
-            "このコマンドはテキストチャンネルでのみ使用できます。",
-            ephemeral=True
-        )
+        await interaction.response.send_message("このコマンドはテキストチャンネルでのみ使用できます。", ephemeral=True)
         return
 
     await interaction.response.defer(ephemeral=True)
@@ -363,34 +322,22 @@ async def nuke(interaction: discord.Interaction):
     old_position = channel.position
     old_category = channel.category
 
-    new_channel = await channel.clone(
-        reason=f"Nuked by {interaction.user}",
-        category=old_category
-    )
-
+    new_channel = await channel.clone(reason=f"Nuked by {interaction.user}", category=old_category)
     await new_channel.edit(position=old_position)
-
     await channel.delete(reason=f"Nuked by {interaction.user}")
 
-    embed = discord.Embed(
-        title="💥 Nuke",
-        description="チャンネルを再生成しました。",
-        color=discord.Color.red()
-    )
+    embed = discord.Embed(title="💥 Nuke", description="チャンネルを再生成しました。", color=discord.Color.red())
     embed.set_image(url=random.choice(NUKE_GIFS))
-
     await new_channel.send(embed=embed)
 
 @bot.event
 async def on_app_command_error(interaction: discord.Interaction, error):
     if isinstance(error, app_commands.errors.MissingPermissions):
-        await interaction.response.send_message(
-            "権限がありません。（チャンネル管理が必要）",
-            ephemeral=True
-        )
+        await interaction.response.send_message("権限がありません。（チャンネル管理が必要）", ephemeral=True)
     else:
         raise error
-# ----venddです^--
+
+# ================= Vending =================
 class VendingSelect(ui.Select):
     def __init__(self):
         options = [
@@ -406,7 +353,6 @@ class VendingSelect(ui.Select):
         item_id = int(self.values[0])
         item = ITEMS[item_id]
 
-        # 特定チャンネルに購入情報送信
         channel = bot.get_channel(LOG_CHANNEL_ID)
         embed = discord.Embed(title=f"購入情報: {item['name']}", color=discord.Color.green())
         embed.add_field(name="商品名", value=item['name'], inline=False)
@@ -416,7 +362,6 @@ class VendingSelect(ui.Select):
         embed.add_field(name="数量", value="1個", inline=False)
         await channel.send(embed=embed)
 
-        # DM 送信
         dm_embed = discord.Embed(
             title="ご購入ありがとうございます",
             description=f"商品: {item['name']}\n数量: 1\n以下の在庫をお受け取りください:\n{item['url']}",
@@ -425,7 +370,7 @@ class VendingSelect(ui.Select):
         try:
             await interaction.user.send(embed=dm_embed)
         except:
-            pass  # DM拒否でも止めない
+            pass
 
         await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
 
@@ -440,15 +385,10 @@ class VendingView(ui.View):
         view.add_item(VendingSelect())
         await interaction.response.send_message("下部のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
 
-# ---------------------------
-# /vending-panel コマンド
-# ---------------------------
 @bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
-    # 最初の ephemeral メッセージ
     await interaction.response.send_message("設置完了。", ephemeral=True)
 
-    # 埋め込みメッセージ作成
     embed = discord.Embed(
         title="無料自販機",
         description="下記ボタンを押して購入したい商品を選択してください\n\n" +
@@ -458,9 +398,9 @@ async def vending_panel(interaction: Interaction):
     embed.set_author(name="自販機パネル", url="https://discords.com/emoji-list")
     embed.set_footer(text="developer @4bc6")
 
-    # ボタン設置
     view = VendingView()
     await interaction.channel.send(embed=embed, view=view)
+
 # ================= 起動 =================
 @bot.event
 async def on_ready():
@@ -483,8 +423,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
-
-
-
