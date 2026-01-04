@@ -218,6 +218,7 @@ async def embed(
     view_dev: str
 ):
     await interaction.response.defer(ephemeral=True)
+
     try:
         desc = description.replace("\\n", "\n")
 
@@ -234,7 +235,7 @@ async def embed(
         if view_dev.lower() == "y":
             embed.set_footer(
                 text=f"developer @4bc6・{now.strftime('%Y/%m/%d %H:%M')}",
-                icon_url=interaction.client.user.display_avatar.url
+                icon_url=interaction.user.display_avatar.url
             )
 
         await interaction.followup.send(embed=embed)
@@ -272,4 +273,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
