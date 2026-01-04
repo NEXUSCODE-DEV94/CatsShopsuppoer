@@ -385,7 +385,7 @@ class VendingView(ui.View):
         view.add_item(VendingSelect())
         await interaction.response.send_message("下部のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
 
-@@bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
+@bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
     embed = discord.Embed(
         title="無料自販機",
@@ -423,5 +423,6 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
