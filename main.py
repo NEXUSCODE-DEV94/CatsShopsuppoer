@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, ui, Interaction
 from aiohttp import web
+from datetime import datetime, timezone, timedelta
 
 # ================= 設定 =================
 ADMIN_ROLE_ID = [1313086280141373441, 1452291945413083247]
@@ -208,6 +209,43 @@ async def yuzu_panel(interaction: Interaction):
     )
     await interaction.channel.send(embed=embed, view=YuzuTicketView())
     await interaction.response.send_message("設置完了", ephemeral=True)
+# ================埋め込み===============
+@bot.tree.command(name="embed", description="カスタムEmbedを送信します")
+@app_commands.describe(
+    title="Embedのタイトル（任意）",
+    description="Embedの説明（\\n または \\n を使用可能）",
+    view_dev="developerフッターを表示するか (y/n)"
+)
+async def embed(
+    interaction: discord.Interaction,
+    title: str | None,
+    description: str,
+    view_dev: str
+):
+    try:
+        desc = description.replace("\\n", "\n")
+
+        embed = discord.Embed(
+            title=title if title else None,
+            description=desc,
+            color=discord.Color.dark_grey(),
+            timestamp=datetime.now()
+        )
+
+        if view_dev.lower() == "y":
+            embed.set_footer(
+                text=f"developer @4bc6・{now.strftime('%Y/%m/%d %H:%M')}",
+                icon_url=interaction.client.user.display_avatar.url
+            )
+
+        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send("送信完了！！", ephemeral=True)
+
+    except Exception as e:
+        if not interaction.response.is_done():
+            await interaction.response.send_message("エラー", ephemeral=True)
+        else:
+            await interaction.followup.send("エラー", ephemeral=True)
 
 # ================= 起動 =================
 @bot.event
