@@ -374,16 +374,19 @@ class VendingSelect(ui.Select):
 
         await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
 
+
 class VendingView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
+        # ボタンを追加
         self.add_item(ui.Button(label="購入", style=discord.ButtonStyle.green, custom_id="buy_button"))
 
     @ui.button(label="購入", style=discord.ButtonStyle.green, custom_id="buy_button")
-    async def buy_button(self, button: ui.Button, interaction: Interaction):
-        view = ui.View(timeout=60)
+    async def buy_button_callback(self, button: ui.Button, interaction: Interaction):
+        view = ui.View(timeout=None)
         view.add_item(VendingSelect())
-        await interaction.response.send_message("下部のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
+        await interaction.response.send_message("下記のセレクトメニューから商品を選択してください。", view=view, ephemeral=True)
+
 
 @bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
@@ -397,8 +400,6 @@ async def vending_panel(interaction: Interaction):
     embed.set_footer(text="developer @4bc6")
 
     view = VendingView()
-
-    # ここで普通のメッセージとして送信（ephemeral は使わない）
     await interaction.response.send_message(embed=embed, view=view)
 
 # ================= 起動 =================
@@ -423,6 +424,7 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
 
