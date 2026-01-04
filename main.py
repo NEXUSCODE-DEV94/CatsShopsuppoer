@@ -211,26 +211,25 @@ async def yuzu_panel(interaction: Interaction):
     await interaction.response.send_message("設置完了", ephemeral=True)
 # ================埋め込み===============
 @bot.tree.command(name="embed", description="カスタムEmbedを送信します")
-@app_commands.describe(
-    title="Embedのタイトル（任意）",
-    description="Embedの説明（\\n または \\n を使用可能）",
-    view_dev="developerフッターを表示するか (y/n)"
-)
 async def embed(
     interaction: discord.Interaction,
     title: str | None,
     description: str,
     view_dev: str
 ):
+    await interaction.response.defer(ephemeral=True)
     try:
         desc = description.replace("\\n", "\n")
 
         embed = discord.Embed(
             title=title if title else None,
             description=desc,
-            color=discord.Color.dark_grey(),
-            timestamp=datetime.now()
+            color=discord.Color.dark_grey()
         )
+
+        from datetime import datetime, timezone, timedelta
+        JST = timezone(timedelta(hours=9))
+        now = datetime.now(JST)
 
         if view_dev.lower() == "y":
             embed.set_footer(
@@ -238,15 +237,19 @@ async def embed(
                 icon_url=interaction.client.user.display_avatar.url
             )
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
+
         await interaction.followup.send("送信完了！！", ephemeral=True)
 
     except Exception as e:
-        if not interaction.response.is_done():
-            await interaction.response.send_message("エラー", ephemeral=True)
-        else:
-            await interaction.followup.send("エラー", ephemeral=True)
+        error_text = str(e)
+        if len(error_text) > 1800:
+            error_text = error_text[:1800] + "…"
 
+        await interaction.followup.send(
+            f"エラーが発生しました\n```{error_text}```",
+            ephemeral=True
+        )
 # ================= 起動 =================
 @bot.event
 async def on_ready():
@@ -269,3 +272,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
