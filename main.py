@@ -353,14 +353,14 @@ class VendingSelect(ui.Select):
             item_id = int(self.values[0])
             item = ITEMS[item_id]
 
-            channel = bot.get_channel(LOG_CHANNEL_ID)
+            log_channel = bot.get_channel(LOG_CHANNEL_ID)
             embed = discord.Embed(title=f"購入情報: {item['name']}", color=discord.Color.green())
             embed.add_field(name="商品名", value=item['name'], inline=False)
             embed.add_field(name="価格", value=f"{item['price']}円", inline=False)
             embed.add_field(name="購入者", value=interaction.user.mention, inline=False)
             embed.add_field(name="購入サーバー", value=interaction.guild.name, inline=False)
             embed.add_field(name="数量", value="1個", inline=False)
-            await channel.send(embed=embed)
+            await log_channel.send(embed=embed)
 
             dm_embed = discord.Embed(
                 title="ご購入ありがとうございます",
@@ -375,20 +375,28 @@ class VendingSelect(ui.Select):
             await interaction.response.send_message(f"購入処理中にエラーが発生しました\n```{e}```", ephemeral=True)
 
 
-class VendingPanelView(ui.View):
+class VendingView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        # ボタン一つだけ追加
-        self.add_item(ui.Button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy_button"))
+        # ボタンはこれだけ。custom_idは一意
+        self.add_item(ui.Button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy"))
 
-    @ui.button(label="購入（押下用）", style=discord.ButtonStyle.green, custom_id="vending_buy_temp")
-    async def buy_button_callback(self, button: ui.Button, interaction: Interaction):
-        # ボタン押下時にセレクトメニューを送信
-        select_view = ui.View()
-        select_view.add_item(VendingSelect())
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        # ボタン押下時の共通チェック
+        return True
+
+# ボタン押下時はここで別の View を送信
+@bot.event
+async def on_interaction(interaction: Interaction):
+    if not interaction.type == discord.InteractionType.component:
+        return
+
+    if interaction.data.get("custom_id") == "vending_buy":
+        view = ui.View()
+        view.add_item(VendingSelect())
         await interaction.response.send_message(
             "下記のセレクトメニューから商品を選択してください。",
-            view=select_view,
+            view=view,
             ephemeral=True
         )
 
@@ -429,4 +437,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
