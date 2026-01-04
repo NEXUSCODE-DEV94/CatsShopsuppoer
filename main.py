@@ -236,7 +236,12 @@ async def embed(
                 icon_url=interaction.user.display_avatar.url
             )
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(
+            "送信完了！！",
+            ephemeral=True
+        )
+
+        await interaction.followup.send(embed=embed)
 
     except Exception as e:
         error_text = str(e)
@@ -275,7 +280,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
-
-
