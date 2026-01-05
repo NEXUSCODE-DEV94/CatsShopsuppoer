@@ -350,40 +350,41 @@ class VendingSelect(ui.Select):
         super().__init__(placeholder="商品を選択してください", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: Interaction):
-        try:
-            item_id = int(self.values[0])
-            item = ITEMS[item_id]
+        item_id = int(self.values[0])
+        item = ITEMS[item_id]
 
-            log_channel = bot.get_channel(LOG_CHANNEL_ID)
-            embed = discord.Embed(title=f"購入情報: {item['name']}", color=discord.Color.green())
-            embed.add_field(name="商品名", value=item['name'], inline=False)
-            embed.add_field(name="価格", value=f"{item['price']}円", inline=False)
-            embed.add_field(name="購入者", value=interaction.user.mention, inline=False)
-            embed.add_field(name="購入サーバー", value=interaction.guild.name, inline=False)
-            embed.add_field(name="数量", value="1個", inline=False)
-            await log_channel.send(embed=embed)
+        log_channel = bot.get_channel(LOG_CHANNEL_ID)
+        embed = discord.Embed(title=f"購入情報: {item['name']}", color=discord.Color.green())
+        embed.add_field(name="商品名", value=item['name'], inline=False)
+        embed.add_field(name="価格", value=f"{item['price']}円", inline=False)
+        embed.add_field(name="購入者", value=interaction.user.mention, inline=False)
+        embed.add_field(name="購入サーバー", value=interaction.guild.name, inline=False)
+        embed.add_field(name="数量", value="1個", inline=False)
+        await log_channel.send(embed=embed)
 
-            dm_embed = discord.Embed(
-                title="ご購入ありがとうございます",
-                description=f"商品: {item['name']}\n数量: 1\n以下の在庫をお受け取りください:\n{item['url']}",
-                color=discord.Color.blue()
-            )
-            await interaction.user.send(embed=dm_embed)
+        dm_embed = discord.Embed(
+            title="ご購入ありがとうございます",
+            description=f"商品: {item['name']}\n数量: 1\n以下の在庫をお受け取りください:\n{item['url']}",
+            color=discord.Color.blue()
+        )
+        await interaction.user.send(embed=dm_embed)
 
-            await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
-
-        except Exception as e:
-            await interaction.response.send_message(f"購入処理中にエラーが発生しました\n```{e}```", ephemeral=True)
+        await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
 
 
 class VendingView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.add_item(ui.Button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy"))
+        # ボタンは1つだけ
+        self.add_item(VendingButton())
 
-    # ボタン押下時に Select を表示する
-    @ui.button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy_button")
-    async def buy_button(self, button: ui.Button, interaction: Interaction):
+
+class VendingButton(ui.Button):
+    def __init__(self):
+        super().__init__(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy")
+
+    async def callback(self, interaction: Interaction):
+        # ボタン押下でセレクトメニューを表示
         view = ui.View()
         view.add_item(VendingSelect())
         await interaction.response.send_message(
@@ -429,3 +430,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
