@@ -365,9 +365,6 @@ async def on_app_command_error(interaction: discord.Interaction, error):
         raise error
 # ================= Vending =================
 # ================= Vending =================
-from discord import ui, Interaction
-import discord
-
 class VendingSelect(ui.Select):
     def __init__(self):
         options = [
@@ -486,6 +483,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
-
