@@ -7,6 +7,7 @@ from aiohttp import web
 from datetime import datetime, timezone, timedelta
 import re
 import random
+from discord.ext import tasks, commands
 
 # ================= 設定 =================
 ADMIN_ROLE_ID = [1313086280141373441, 1452291945413083247]
@@ -19,6 +20,10 @@ LOG_CHANNEL_ID = 1313099999537532928
 VERIFY_ROLE_ID = 1313100654507458561
 EMOJI_ID = "<a:verify:1450459063052927079>"
 IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
+
+GUILD_ID = 1313077923741438004
+CHANNEL_ID = 1457317342488035502
+UPDATE_INTERVAL = 60
 
 LOG_CHANNEL_ID = 1457317342488035502
 
@@ -437,6 +442,26 @@ async def vending_panel(interaction: Interaction):
 
     view = VendingView()
     await interaction.response.send_message(embed=embed, view=view)
+# --aa-autokousinn--
+@tasks.loop(seconds=UPDATE_INTERVAL)
+async def update_channel_name():
+    guild = bot.get_guild(GUILD_ID)
+    if not guild:
+        return
+    channel = guild.get_channel(CHANNEL_ID)
+    if not channel:
+        return
+
+    counter = 0
+    async for _ in channel.history(limit=None):
+        counter += 1
+
+    new_name = f"✅｜配布実績《{counter}》"
+    if channel.name != new_name:
+        try:
+            await channel.edit(name=new_name)
+        except discord.HTTPException:
+            print("チャンネル名更新でエラー発生（レート制限かも）")
 # ================= 起動 =================
 @bot.event
 async def on_ready():
@@ -445,6 +470,7 @@ async def on_ready():
     bot.add_view(YuzuTicketView())
     bot.add_view(VendingView())
     await bot.tree.sync()
+    update_channel_name.start()
     print("BOT READY")
 
 async def start():
@@ -460,3 +486,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
