@@ -359,6 +359,10 @@ async def on_app_command_error(interaction: discord.Interaction, error):
     else:
         raise error
 # ================= Vending =================
+# ================= Vending =================
+from discord import ui, Interaction
+import discord
+
 class VendingSelect(ui.Select):
     def __init__(self):
         options = [
@@ -375,7 +379,10 @@ class VendingSelect(ui.Select):
         item = ITEMS[item_id]
 
         log_channel = bot.get_channel(LOG_CHANNEL_ID)
-        embed = discord.Embed(title=f"無料配布: {item['name']}", color=discord.Color.green())
+        embed = discord.Embed(
+            title=f"無料配布: {item['name']}",
+            color=discord.Color.green()
+        )
         embed.add_field(name="商品名", value=item['name'], inline=False)
         embed.add_field(name="価格", value=f"{item['price']}円", inline=False)
         embed.add_field(name="購入者", value=interaction.user.mention, inline=False)
@@ -412,6 +419,7 @@ class VendingButton(ui.Button):
             ephemeral=True
         )
 
+
 @bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
     embed = discord.Embed(
@@ -425,10 +433,7 @@ async def vending_panel(interaction: Interaction):
         name="自販機パネル",
         icon_url="https://i.postimg.cc/9f11xvX1/18174-600x600-(1).jpg"
     )
-
     embed.set_footer(text="developer @4bc6")
-
-    await interaction.response.send_message(embed=embed)
 
     view = VendingView()
     await interaction.response.send_message(embed=embed, view=view)
@@ -455,8 +460,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
-
-
-
