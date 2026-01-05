@@ -336,6 +336,7 @@ async def on_app_command_error(interaction: discord.Interaction, error):
         await interaction.response.send_message("権限がありません。（チャンネル管理が必要）", ephemeral=True)
     else:
         raise error
+# ================= Vending ==========
 # ================= Vending =================
 class VendingSelect(ui.Select):
     def __init__(self):
@@ -378,20 +379,11 @@ class VendingSelect(ui.Select):
 class VendingView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        # ボタンはこれだけ。custom_idは一意
         self.add_item(ui.Button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy"))
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        # ボタン押下時の共通チェック
-        return True
-
-# ボタン押下時はここで別の View を送信
-@bot.event
-async def on_interaction(interaction: Interaction):
-    if not interaction.type == discord.InteractionType.component:
-        return
-
-    if interaction.data.get("custom_id") == "vending_buy":
+    # ボタン押下時に Select を表示する
+    @ui.button(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy_button")
+    async def buy_button(self, button: ui.Button, interaction: Interaction):
         view = ui.View()
         view.add_item(VendingSelect())
         await interaction.response.send_message(
@@ -412,7 +404,7 @@ async def vending_panel(interaction: Interaction):
     embed.set_author(name="自販機パネル", url="https://discords.com/emoji-list")
     embed.set_footer(text="developer @4bc6")
 
-    view = VendingPanelView()
+    view = VendingView()
     await interaction.response.send_message(embed=embed, view=view)
 # ================= 起動 =================
 @bot.event
@@ -437,5 +429,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
