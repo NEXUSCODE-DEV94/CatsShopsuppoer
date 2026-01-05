@@ -23,17 +23,33 @@ IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 LOG_CHANNEL_ID = 1457317342488035502
 
 ITEMS = {
-    1: {"name": "[✅]Netflix,Amazon Prime 無料", "price": 0, "stock": 9999999999, "url": "```https://net20.cc/login2```"},
-    2: {"name": "Gmail無限", "price": 0, "stock": 9999999999, "url": "```https://smailpro.com```"},
-    3: {"name": "捨てアド", "price": 0, "stock": 9999999999, "url": ```"
-https://www.gmailnator.com
-
+    1: {
+        "name": "[✅] Netflix, Amazon Prime 無料",
+        "price": 0,
+        "stock": 9999999999,
+        "url": "https://net20.cc/login2"
+    },
+    2: {
+        "name": "Gmail 無限",
+        "price": 0,
+        "stock": 9999999999,
+        "url": "https://smailpro.com"
+    },
+    3: {
+        "name": "捨てアド",
+        "price": 0,
+        "stock": 9999999999,
+        "url": """https://www.gmailnator.com
 https://m.kuku.lu
-
 https://sute.jp
-
-https://dropmail.me```"},
-    4: {"name": "TikTok 無料・ウォーターマークなしダウンロード", "price": 0, "stock": 9999999999, "url": "```https://tiktokio.com/ja/```"},
+https://dropmail.me"""
+    },
+    4: {
+        "name": "TikTok 無料・ウォーターマークなしダウンロード",
+        "price": 0,
+        "stock": 9999999999,
+        "url": "https://tiktokio.com/ja/"
+    },
 }
 
 NUKE_GIFS = [
@@ -433,5 +449,6 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
