@@ -20,15 +20,21 @@ VERIFY_ROLE_ID = 1313100654507458561
 EMOJI_ID = "<a:verify:1450459063052927079>"
 IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 
-ITEMS = {
-    1: {"name": "aa", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
-    2: {"name": "bb", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
-    3: {"name": "cc", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
-    4: {"name": "dd", "price": 0, "stock": 9999999999, "url": "https://discords.com/emoji-list"},
-}
+LOG_CHANNEL_ID = 1457317342488035502
 
-# 購入ログ送信先
-LOG_CHANNEL_ID = 1457301424017899622
+ITEMS = {
+    1: {"name": "[✅]Netflix,Amazon Prime 無料", "price": 0, "stock": 9999999999, "url": "```https://net20.cc/login2```"},
+    2: {"name": "Gmail無限", "price": 0, "stock": 9999999999, "url": "```https://smailpro.com```"},
+    3: {"name": "捨てアド", "price": 0, "stock": 9999999999, "url": ```"
+https://www.gmailnator.com
+
+https://m.kuku.lu
+
+https://sute.jp
+
+https://dropmail.me```"},
+    4: {"name": "TikTok 無料・ウォーターマークなしダウンロード", "price": 0, "stock": 9999999999, "url": "```https://tiktokio.com/ja/```"},
+}
 
 NUKE_GIFS = [
     "https://i.pinimg.com/originals/3a/e7/92/3ae792706e97941696b70b4763bd2963.gif",
@@ -375,7 +381,6 @@ class VendingSelect(ui.Select):
 class VendingView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        # ボタンは1つだけ
         self.add_item(VendingButton())
 
 
@@ -384,7 +389,6 @@ class VendingButton(ui.Button):
         super().__init__(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy")
 
     async def callback(self, interaction: Interaction):
-        # ボタン押下でセレクトメニューを表示
         view = ui.View()
         view.add_item(VendingSelect())
         await interaction.response.send_message(
@@ -393,16 +397,15 @@ class VendingButton(ui.Button):
             ephemeral=True
         )
 
-
 @bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
     embed = discord.Embed(
         title="無料自販機",
         description="下記ボタンを押して購入したい商品を選択してください\n\n" +
-                    "\n".join([f"**{item['name']}**\n```値段: {item['price']}円```" for item in ITEMS.values()]),
+                    "\n".join([f"**{item['name']}**\n" for item in ITEMS.values()]),
         color=discord.Color.green()
     )
-    embed.set_author(name="自販機パネル", url="https://discords.com/emoji-list")
+    embed.set_author(name="自販機パネル", url="https://i.postimg.cc/9f11xvX1/18174-600x600-(1).jpg")
     embed.set_footer(text="developer @4bc6")
 
     view = VendingView()
@@ -430,4 +433,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
