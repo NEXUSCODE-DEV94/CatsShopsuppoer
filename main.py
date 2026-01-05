@@ -459,6 +459,22 @@ async def update_channel_name():
             await channel.edit(name=new_name)
         except discord.HTTPException:
             print("チャンネル名更新でエラー発生（レート制限かも）")
+# ============dmsendd====
+@bot.tree.command(name="dm", description="指定ユーザーにDMを送信します")
+@app_commands.describe(user="送信先ユーザー", message="送信するメッセージ")
+async def dm(interaction: discord.Interaction, user: discord.User, message: str):
+    """指定したユーザーにDMを送る"""
+    try:
+        embed = discord.Embed(
+            title=f"{interaction.guild.name}オーナーからのDM",
+            description=message,
+            color=discord.Color.blue()
+        )
+        embed.set_footer(text=f"{interaction.user.name}")
+        await user.send(embed=embed)
+        await interaction.response.send_message(f"{user} にDMを送信しました。", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"DMの送信に失敗しました: {e}", ephemeral=True)
 # ================= 起動 =================
 @bot.event
 async def on_ready():
@@ -483,3 +499,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
