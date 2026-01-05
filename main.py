@@ -23,7 +23,7 @@ IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 
 GUILD_ID = 1313077923741438004
 CHANNEL_ID = 1457317342488035502
-UPDATE_INTERVAL = 60
+UPDATE_INTERVAL = 300
 
 LOG_CHANNEL_ID = 1457317342488035502
 
@@ -486,4 +486,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
