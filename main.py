@@ -456,7 +456,7 @@ async def update_channel_name():
     async for _ in channel.history(limit=None):
         counter += 1
 
-    new_name = f"✅｜配布実績《{counter}》"
+    new_name = f"『✅』｜配布実績《{counter}》"
     if channel.name != new_name:
         try:
             await channel.edit(name=new_name)
@@ -486,5 +486,6 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
