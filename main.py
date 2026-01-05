@@ -109,7 +109,7 @@ class TicketDeleteButton(ui.Button):
 
 class TicketCloseButton(ui.Button):
     def __init__(self, user: discord.Member):
-        super().__init__(style=discord.ButtonStyle.secondary, label="管理者専用ボタン")
+        super().__init__(style=discord.ButtonStyle.secondary, label="対応済み")
         self.user = user
 
     async def callback(self, interaction: Interaction):
@@ -499,4 +499,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
