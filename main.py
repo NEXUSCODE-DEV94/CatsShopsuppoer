@@ -146,7 +146,7 @@ class TicketSelect(ui.Select):
         for ch in interaction.guild.text_channels:
             if ch.category_id == DONE_CATEGORY_ID:
                 continue
-            if ch.name == f"🎫｜{self.user.name}":
+            if ch.name == f"🎫｜{interaction.user.name}":
                 await interaction.response.send_message(
                     f"すでにチケットがあります → {ch.mention}",
                     ephemeral=True
@@ -202,7 +202,6 @@ class TicketSelect(ui.Select):
             ephemeral=True
         )
 
-
 # ================= YUZU =================
 class YuzuTicketView(ui.View):
     def __init__(self):
@@ -216,7 +215,7 @@ class YuzuTicketView(ui.View):
         for ch in interaction.guild.text_channels:
             if ch.category_id == DONE_CATEGORY_ID:
                 continue
-            if ch.name == f"🎫｜{self.user.name}":
+            if ch.name == f"🎫｜{interaction.user.name}":
                 await interaction.response.send_message(
                     f"すでにチケットがあります → {ch.mention}",
                     ephemeral=True
@@ -227,14 +226,13 @@ class YuzuTicketView(ui.View):
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
         }
-        for rid in ADMIN_GET_ROLE:
-            role = interaction.guild.get_role(rid)
-            if role:
-                overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
-        ch = await category.create_text_channel(
-            f"🎫｜{user.name}",
-            overwrites=overwrites
+        role = interaction.guild.get_role(ADMIN_GET_ROLE)
+        if role:
+            overwrites[role] = discord.PermissionOverwrite(
+                view_channel=True,
+                send_messages=True
+            )
         )
 
         embed = discord.Embed(
@@ -525,6 +523,7 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
 
