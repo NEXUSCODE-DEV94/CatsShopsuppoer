@@ -513,8 +513,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
-
-
-
