@@ -16,6 +16,7 @@ TICKET_CATEGORY_ID = 1450086411956129894
 YUZU_TICKET_CATEGORY_ID = 1455540840708702300
 DONE_CATEGORY_ID = 1456845967545471157
 LOG_CHANNEL_ID = 1313099999537532928
+ADMIN_ROLLE = 1459385479026966661
 
 VERIFY_ROLE_ID = 1313100654507458561
 EMOJI_ID = "<a:verify:1450459063052927079>"
@@ -139,7 +140,9 @@ class TicketSelect(ui.Select):
     async def callback(self, interaction: Interaction):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
 
-        for ch in category.text_channels:
+        for ch in interaction.guild.text_channels:
+            if ch.category_id == DONE_CATEGORY_ID:
+                continue
             if ch.name == f"🎫｜{self.user.name}":
                 await interaction.response.send_message(
                     f"すでにチケットがあります → {ch.mention}",
@@ -167,7 +170,12 @@ class TicketSelect(ui.Select):
             color=discord.Color.blue()
         )
 
-        await ch.send(self.user.mention, embed=embed, view=TicketView(self.user))
+        role = interaction.guild.get_role(ADMIN_ROLLE)
+        await ch.send(
+            f"{user.mention} {role.mention}",
+            embed=embed,
+            view=TicketView(user)
+        )
         await interaction.response.send_message(f"{ch.mention} を作成しました", ephemeral=True)
 
 class TicketPanel(ui.View):
@@ -194,8 +202,10 @@ class YuzuTicketView(ui.View):
         user = interaction.user
         category = interaction.guild.get_channel(YUZU_TICKET_CATEGORY_ID)
 
-        for ch in category.text_channels:
-            if ch.name == f"🎫｜{user.name}":
+        for ch in interaction.guild.text_channels:
+            if ch.category_id == DONE_CATEGORY_ID:
+                continue
+            if ch.name == f"🎫｜{self.user.name}":
                 await interaction.response.send_message(
                     f"すでにチケットがあります → {ch.mention}",
                     ephemeral=True
@@ -222,7 +232,12 @@ class YuzuTicketView(ui.View):
             color=discord.Color.purple()
         )
 
-        await ch.send(user.mention, embed=embed, view=TicketView(user))
+        role = interaction.guild.get_role(ADMIN_ROLLE)
+        await ch.send(
+            f"{user.mention} {role.mention}",
+            embed=embed,
+            view=TicketView(user)
+        )
         await interaction.response.send_message(f"{ch.mention} を作成しました", ephemeral=True)
 
 # ================= コマンド =================
@@ -499,5 +514,6 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
