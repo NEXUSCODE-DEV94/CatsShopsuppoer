@@ -12,14 +12,14 @@ class VendingSelect(ui.Select):
         item = ITEMS[item_id]
         log_channel = interaction.client.get_channel(LOG_CHANNEL_ID)
         embed = discord.Embed(title=f"無料配布: {item['name']}", color=discord.Color.green())
-        embed.add_field(name="商品名", value=item['name'], inline=False)
-        embed.add_field(name="価格", value=f"{item['price']}円", inline=False)
-        embed.add_field(name="購入者", value=interaction.user.mention, inline=False)
-        embed.add_field(name="数量", value="1個", inline=False)
+        embed.add_field(name="💎 商品名", value=item['name'], inline=False)
+        embed.add_field(name="💰 価格", value=f"{item['price']}円", inline=False)
+        embed.add_field(name="👤 購入者", value=interaction.user.mention, inline=False)
+        embed.add_field(name="🛍️ 個数", value="1個", inline=False)
         embed.set_footer(text="developer @4bc6")
         await log_channel.send(embed=embed)
 
-        dm_embed = discord.Embed(title="ご購入ありがとうございます", description=f"商品: {item['name']}\n数量: 1\n以下の在庫をお受け取りください:\n{item['url']}", color=discord.Color.blue())
+        dm_embed = discord.Embed(title="ご購入ありがとうございます", description=f"商品: {item['name']}\n数量: 1\n以下の商品をお受け取りください:\n{item['url']}", color=discord.Color.blue())
         await interaction.user.send(embed=dm_embed)
         await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
 
@@ -30,7 +30,7 @@ class VendingView(ui.View):
 
 class VendingButton(ui.Button):
     def __init__(self):
-        super().__init__(label="購入", style=discord.ButtonStyle.green, custom_id="vending_buy")
+        super().__init__(label="🛒 購入", style=discord.ButtonStyle.green, custom_id="vending_buy")
 
     async def callback(self, interaction: Interaction):
         view = ui.View()
