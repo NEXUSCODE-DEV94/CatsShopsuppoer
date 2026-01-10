@@ -130,11 +130,14 @@ class TicketView(ui.View):
 class TicketSelect(ui.Select):
     def __init__(self, user: discord.Member):
         options = [
-            discord.SelectOption(label="ゲーム", description="ゲーム関連の問い合わせ"),
-            discord.SelectOption(label="アカウント", description="アカウント関連の問い合わせ"),
-            discord.SelectOption(label="その他", description="その他の問い合わせ"),
+            discord.SelectOption(label="ゲーム"),
+            discord.SelectOption(label="アカウント"),
+            discord.SelectOption(label="その他"),
         ]
-        super().__init__(placeholder="チケットの種類を選択", options=options)
+        super().__init__(
+            placeholder="チケットの種類を選択",
+            options=options
+        )
         self.user = user
 
     async def callback(self, interaction: Interaction):
@@ -151,46 +154,54 @@ class TicketSelect(ui.Select):
                 return
 
         overwrites = {
-            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            self.user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
+            interaction.guild.default_role: discord.PermissionOverwrite(
+                view_channel=False
+            ),
+            self.user: discord.PermissionOverwrite(
+                view_channel=True,
+                send_messages=True
+            ),
         }
-        for rid in ADMIN_GET_ROLE:
+
+        for rid in ADMIN_ROLE_ID:
             role = interaction.guild.get_role(rid)
             if role:
-                overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+                overwrites[role] = discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=True
+                )
 
         ch = await category.create_text_channel(
-            f"🎫｜{self.user.name}",
+            name=f"🎫｜{self.user.name}",
             overwrites=overwrites
         )
 
         embed = discord.Embed(
             title=f"Ticket | {self.user.name}",
-            description=f"**種別:** {self.values[0]}\n管理者の対応をお待ちください。",
+            description=(
+                f"**種別:** {self.values[0]}\n"
+                "管理者の対応をお待ちください。"
+            ),
             color=discord.Color.blue()
         )
 
-        role = interaction.guild.get_role(ADMIN_GET_ROLE)
+        notify_role = interaction.guild.get_role(ADMIN_GET_ROLE)
+
+        content = self.user.mention
+        if notify_role:
+            content += f" {notify_role.mention}"
+
         await ch.send(
-            f"{user.mention} {role.mention}",
+            content,
             embed=embed,
-            view=TicketView(user)
+            view=TicketView(self.user)
         )
-        await interaction.response.send_message(f"{ch.mention} を作成しました", ephemeral=True)
 
-class TicketPanel(ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @ui.button(label="チケットを作成", style=discord.ButtonStyle.secondary, custom_id="create_ticket")
-    async def create(self, interaction: Interaction, button: ui.Button):
-        view = ui.View()
-        view.add_item(TicketSelect(interaction.user))
         await interaction.response.send_message(
-            "チケットの種類を選択してください",
-            view=view,
+            f"{ch.mention} を作成しました",
             ephemeral=True
         )
+
 
 # ================= YUZU =================
 class YuzuTicketView(ui.View):
@@ -514,5 +525,6 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
