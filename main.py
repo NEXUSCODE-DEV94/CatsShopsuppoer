@@ -1,13 +1,12 @@
 import os
 import asyncio
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands, ui, Interaction
 from aiohttp import web
 from datetime import datetime, timezone, timedelta
 import re
 import random
-from discord.ext import tasks, commands
 
 # ================= 設定 =================
 ADMIN_ROLE_ID = [1313086280141373441, 1452291945413083247]
@@ -15,7 +14,7 @@ ADMIN_ROLE_ID = [1313086280141373441, 1452291945413083247]
 TICKET_CATEGORY_ID = 1450086411956129894
 YUZU_TICKET_CATEGORY_ID = 1455540840708702300
 DONE_CATEGORY_ID = 1456845967545471157
-LOG_CHANNEL_ID = 1313099999537532928
+LOG_CHANNEL_ID = 1457317342488035502
 ADMIN_GET_ROLE = 1459385479026966661
 
 VERIFY_ROLE_ID = 1313100654507458561
@@ -25,8 +24,6 @@ IMAGE_URL = "https://i.postimg.cc/rmKMZkcy/standard.gif"
 GUILD_ID = 1313077923741438004
 CHANNEL_ID = 1457317342488035502
 UPDATE_INTERVAL = 300
-
-LOG_CHANNEL_ID = 1457317342488035502
 
 ITEMS = {
     1: {
@@ -126,14 +123,25 @@ class TicketView(ui.View):
         self.add_item(TicketCloseButton(user))
         self.add_item(TicketDeleteButton())
 
-# ================= 通常チケットパネル =================
+# ================= 通常チケットパネル（修正版） =================
 class TicketPanel(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.add_item(TicketPanelSelect())
+        self.add_item(TicketPanelButton())
+
+class TicketPanelButton(ui.Button):
+    def __init__(self):
+        super().__init__(label="チケット作成", style=discord.ButtonStyle.primary, custom_id="ticket_panel_button")
+
+    async def callback(self, interaction: Interaction):
+        await interaction.response.send_message(
+            "下記のセレクトメニューからチケットの種類を選択してください。",
+            view=TicketPanelSelect(interaction.user),
+            ephemeral=True
+        )
 
 class TicketPanelSelect(ui.Select):
-    def __init__(self):
+    def __init__(self, user: discord.Member):
         options = [
             discord.SelectOption(label="ゲーム"),
             discord.SelectOption(label="アカウント"),
@@ -145,25 +153,15 @@ class TicketPanelSelect(ui.Select):
             min_values=1,
             max_values=1
         )
+        self.user = user
 
     async def callback(self, interaction: Interaction):
-        user = interaction.user
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
 
-        # 既にチケットが存在するかチェック
-        for ch in interaction.guild.text_channels:
-            if ch.category_id == DONE_CATEGORY_ID:
-                continue
-            if ch.name == f"🎫｜{user.name}":
-                await interaction.response.send_message(
-                    f"すでにチケットがあります → {ch.mention}",
-                    ephemeral=True
-                )
-                return
-
+        # 対応済みでもチケット作成可能に変更
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
+            self.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
         }
 
         for rid in ADMIN_ROLE_ID:
@@ -172,23 +170,24 @@ class TicketPanelSelect(ui.Select):
                 overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
         ch = await category.create_text_channel(
-            name=f"🎫｜{user.name}",
+            name=f"🎫｜{self.user.name}",
             overwrites=overwrites
         )
 
         embed = discord.Embed(
-            title=f"Ticket | {user.name}",
+            title=f"Ticket | {self.user.name}",
             description=f"**種別:** {self.values[0]}\n管理者の対応をお待ちください。",
             color=discord.Color.blue()
         )
 
         notify_role = interaction.guild.get_role(ADMIN_GET_ROLE)
-        content = user.mention
+        content = self.user.mention
         if notify_role:
             content += f" {notify_role.mention}"
 
-        await ch.send(content, embed=embed, view=TicketView(user))
+        await ch.send(content, embed=embed, view=TicketView(self.user))
         await interaction.response.send_message(f"{ch.mention} を作成しました", ephemeral=True)
+
 # ================= YUZU =================
 class YuzuTicketView(ui.View):
     def __init__(self):
@@ -199,16 +198,7 @@ class YuzuTicketView(ui.View):
         user = interaction.user
         category = interaction.guild.get_channel(YUZU_TICKET_CATEGORY_ID)
 
-        for ch in interaction.guild.text_channels:
-            if ch.category_id == DONE_CATEGORY_ID:
-                continue
-            if ch.name == f"🎫｜{interaction.user.name}":
-                await interaction.response.send_message(
-                    f"すでにチケットがあります → {ch.mention}",
-                    ephemeral=True
-                )
-                return
-
+        # 対応済みでも作成可能に変更
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
@@ -220,13 +210,18 @@ class YuzuTicketView(ui.View):
                 view_channel=True,
                 send_messages=True
             )
+
+        ch = await category.create_text_channel(
+            name=f"🎫｜{user.name}",
+            overwrites=overwrites
+        )
+
         embed = discord.Embed(
             title=f"R18 Ticket | {user.name}",
             description="管理者の対応をお待ちください。",
             color=discord.Color.purple()
         )
 
-        role = interaction.guild.get_role(ADMIN_GET_ROLE)
         await ch.send(
             f"{user.mention} {role.mention}",
             embed=embed,
@@ -264,7 +259,6 @@ async def yuzu_panel(interaction: Interaction):
     await interaction.channel.send(embed=embed, view=YuzuTicketView())
     await interaction.response.send_message("設置完了", ephemeral=True)
 
-# ================= Embed コマンド =================
 @bot.tree.command(name="embed", description="カスタムEmbedを送信します")
 async def embed(
     interaction: discord.Interaction,
@@ -484,7 +478,7 @@ async def dm(interaction: discord.Interaction, user: discord.User, message: str)
         await interaction.response.send_message(f"{user} にDMを送信しました。", ephemeral=True)
     except Exception as e:
         await interaction.response.send_message(f"DMの送信に失敗しました: {e}", ephemeral=True)
-# ================= 起動 =================
+# 起動
 @bot.event
 async def on_ready():
     bot.add_view(VerifyView())
@@ -508,9 +502,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
-
-
-
-
-
