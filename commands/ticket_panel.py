@@ -22,7 +22,7 @@ class TicketCloseButton(ui.Button):
 
 class TicketView(ui.View):
     def __init__(self, user: discord.Member):
-        super().__init__(timeout=None)
+        super().__init__(timeout=None)  # 永続化
         self.add_item(TicketCloseButton(user))
         self.add_item(TicketDeleteButton())
 
@@ -48,7 +48,10 @@ class TicketPanelSelect(ui.Select):
             if role:
                 overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
-        ch = await category.create_text_channel(name=f"🎫｜{self.user.name}", overwrites=overwrites)
+        ch = await category.create_text_channel(
+            name=f"🎫｜{self.user.name}",
+            overwrites=overwrites
+        )
         embed = discord.Embed(
             title=f"Ticket | {self.user.name}",
             description=f"**種別:** {self.values[0]}\n管理者の対応をお待ちください。",
@@ -68,12 +71,13 @@ class TicketPanelButton(ui.Button):
         super().__init__(label="チケット作成", style=discord.ButtonStyle.primary)
 
     async def callback(self, interaction: Interaction):
+        # ephemeral はやめて通常チャンネルに送信
         view = ui.View()
         view.add_item(TicketPanelSelect(interaction.user))
         await interaction.response.send_message(
             "下記のセレクトメニューからチケットの種類を選択してください。",
             view=view,
-            ephemeral=True
+            ephemeral=False
         )
 
 # ================== パネル ==================
@@ -90,4 +94,5 @@ async def setup(bot):
             description="## __Ticket Panel__\n> 購入：お問い合わせ\n> 迷惑行為禁止",
             color=discord.Color.dark_grey()
         )
+        # メインチャンネルに送信、ephemeral なし
         await interaction.response.send_message(embed=embed, view=TicketPanel())
