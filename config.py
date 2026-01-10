@@ -26,8 +26,8 @@ NUKE_GIFS = [
 ]
 
 ITEMS = {
-    1: {"name":"[🍿] Netflix, Amazon Prime 無料","price":0,"stock":9999999999,"url":"https://net20.cc/login2"},
-    2: {"name":"[📩]Gmail 無限","price":0,"stock":9999999999,"url":"https://smailpro.com"},
-    3: {"name":"[🚮]捨てアド","price":0,"stock":9999999999,"url":"https://www.gmailnator.com\nhttps://m.kuku.lu\nhttps://sute.jp\nhttps://dropmail.me"},
-    4: {"name":"[📱]TikTok 無料・ウォーターマークなしダウンロード","price":0,"stock":9999999999,"url":"https://tiktokio.com/ja/"},
+    1: {"name":"Netflix, Amazon Prime 無料で見れるサイト","price":0,"stock":9999999999,"url":"https://net20.cc/login2"},
+    2: {"name":"Gmail 無限サイト","price":0,"stock":9999999999,"url":"https://smailpro.com"},
+    3: {"name":"捨てアドサイト","price":0,"stock":9999999999,"url":"https://www.gmailnator.com\nhttps://m.kuku.lu\nhttps://sute.jp\nhttps://dropmail.me"},
+    4: {"name":"TikTok 無料＆透かしなしダウンロードサイト","price":0,"stock":9999999999,"url":"https://tiktokio.com/ja/"},
 }
