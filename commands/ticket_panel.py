@@ -6,6 +6,7 @@ from config import ADMIN_ROLE_ID, TICKET_CATEGORY_ID, ADMIN_GET_ROLE, DONE_CATEG
 class TicketDeleteButton(ui.Button):
     def __init__(self):
         super().__init__(style=discord.ButtonStyle.danger, label="チケット削除")
+
     async def callback(self, interaction: Interaction):
         await interaction.channel.delete()
 
@@ -13,6 +14,7 @@ class TicketCloseButton(ui.Button):
     def __init__(self, user: discord.Member):
         super().__init__(style=discord.ButtonStyle.secondary, label="対応済み")
         self.user = user
+
     async def callback(self, interaction: Interaction):
         await interaction.channel.set_permissions(self.user, send_messages=False)
         done = interaction.guild.get_channel(DONE_CATEGORY_ID)
@@ -39,6 +41,8 @@ class TicketPanelSelect(ui.Select):
 
     async def callback(self, interaction: Interaction):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
+
+        # ここで対応済みでも新しいチケットを作成できるようにする
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             self.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
@@ -48,10 +52,12 @@ class TicketPanelSelect(ui.Select):
             if role:
                 overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
 
+        # 新しいチャンネル作成
         ch = await category.create_text_channel(
             name=f"🎫｜{self.user.name}",
             overwrites=overwrites
         )
+
         embed = discord.Embed(
             title=f"Ticket | {self.user.name}",
             description=f"**種別:** {self.values[0]}\n管理者の対応をお待ちください。",
@@ -63,7 +69,7 @@ class TicketPanelSelect(ui.Select):
             content += f" {notify_role.mention}"
 
         await ch.send(content, embed=embed, view=TicketView(self.user))
-        await interaction.response.send_message(f"{ch.mention} を作成しました", ephemeral=True)
+        await interaction.response.send_message(f"{ch.mention} を作成しました", ephemeral=True)  # ephemeral
 
 # ================== パネルボタン ==================
 class TicketPanelButton(ui.Button):
@@ -71,19 +77,19 @@ class TicketPanelButton(ui.Button):
         super().__init__(label="チケット作成", style=discord.ButtonStyle.primary)
 
     async def callback(self, interaction: Interaction):
-        # ephemeral はやめて通常チャンネルに送信
+        # ephemeral にする
         view = ui.View()
         view.add_item(TicketPanelSelect(interaction.user))
         await interaction.response.send_message(
             "下記のセレクトメニューからチケットの種類を選択してください。",
             view=view,
-            ephemeral=False
+            ephemeral=True  # ephemeral
         )
 
 # ================== パネル ==================
 class TicketPanel(ui.View):
     def __init__(self):
-        super().__init__(timeout=None)
+        super().__init__(timeout=None)  # 永続化
         self.add_item(TicketPanelButton())
 
 # ================== コマンド ==================
@@ -94,5 +100,4 @@ async def setup(bot):
             description="## __Ticket Panel__\n> 購入：お問い合わせ\n> 迷惑行為禁止",
             color=discord.Color.dark_grey()
         )
-        # メインチャンネルに送信、ephemeral なし
-        await interaction.response.send_message(embed=embed, view=TicketPanel())
+        await interaction.response.send_message(embed=embed, view=TicketPanel())  # ephemeral なし
