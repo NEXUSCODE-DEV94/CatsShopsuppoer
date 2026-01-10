@@ -154,7 +154,7 @@ class TicketSelect(ui.Select):
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             self.user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
         }
-        for rid in ADMIN_ROLE_ID:
+        for rid in ADMIN_GET_ROLE:
             role = interaction.guild.get_role(rid)
             if role:
                 overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
@@ -170,7 +170,7 @@ class TicketSelect(ui.Select):
             color=discord.Color.blue()
         )
 
-        role = interaction.guild.get_role(ADMIN_ROLE_ID)
+        role = interaction.guild.get_role(ADMIN_GET_ROLE)
         await ch.send(
             f"{user.mention} {role.mention}",
             embed=embed,
@@ -216,7 +216,7 @@ class YuzuTicketView(ui.View):
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
         }
-        for rid in ADMIN_ROLE_ID:
+        for rid in ADMIN_GET_ROLE:
             role = interaction.guild.get_role(rid)
             if role:
                 overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
@@ -514,4 +514,5 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
