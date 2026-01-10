@@ -158,7 +158,6 @@ class TicketPanelSelect(ui.Select):
     async def callback(self, interaction: Interaction):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
 
-        # 対応済みでもチケット作成可能に変更
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             self.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
@@ -198,7 +197,6 @@ class YuzuTicketView(ui.View):
         user = interaction.user
         category = interaction.guild.get_channel(YUZU_TICKET_CATEGORY_ID)
 
-        # 対応済みでも作成可能に変更
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
@@ -360,13 +358,14 @@ async def nuke(interaction: discord.Interaction):
     embed.set_image(url=random.choice(NUKE_GIFS))
     await new_channel.send(embed=embed)
 
+# ================= エラー処理 =================
 @bot.event
 async def on_app_command_error(interaction: discord.Interaction, error):
     if isinstance(error, app_commands.errors.MissingPermissions):
         await interaction.response.send_message("権限がありません。（チャンネル管理が必要）", ephemeral=True)
     else:
         raise error
-# ================= Vending =================
+
 # ================= Vending =================
 class VendingSelect(ui.Select):
     def __init__(self):
@@ -404,12 +403,10 @@ class VendingSelect(ui.Select):
 
         await interaction.response.send_message("購入完了！DMを確認してください。", ephemeral=True)
 
-
 class VendingView(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(VendingButton())
-
 
 class VendingButton(ui.Button):
     def __init__(self):
@@ -423,7 +420,6 @@ class VendingButton(ui.Button):
             view=view,
             ephemeral=True
         )
-
 
 @bot.tree.command(name="vending-panel", description="無料自販機パネルを設置します")
 async def vending_panel(interaction: Interaction):
@@ -442,7 +438,8 @@ async def vending_panel(interaction: Interaction):
 
     view = VendingView()
     await interaction.response.send_message(embed=embed, view=view)
-# --aa-autokousinn--
+
+# ================= 自動更新 =================
 @tasks.loop(seconds=UPDATE_INTERVAL)
 async def update_channel_name():
     guild = bot.get_guild(GUILD_ID)
@@ -462,11 +459,11 @@ async def update_channel_name():
             await channel.edit(name=new_name)
         except discord.HTTPException:
             print("チャンネル名更新でエラー発生（レート制限かも）")
-# ============dmsendd====
+
+# ================= DM =================
 @bot.tree.command(name="dm", description="指定ユーザーにDMを送信します")
 @app_commands.describe(user="送信先ユーザー", message="送信するメッセージ")
 async def dm(interaction: discord.Interaction, user: discord.User, message: str):
-    """指定したユーザーにDMを送る"""
     try:
         embed = discord.Embed(
             title=f"{interaction.guild.name}オーナーからのDM",
@@ -478,7 +475,8 @@ async def dm(interaction: discord.Interaction, user: discord.User, message: str)
         await interaction.response.send_message(f"{user} にDMを送信しました。", ephemeral=True)
     except Exception as e:
         await interaction.response.send_message(f"DMの送信に失敗しました: {e}", ephemeral=True)
-# 起動
+
+# ================= 起動 =================
 @bot.event
 async def on_ready():
     bot.add_view(VerifyView())
