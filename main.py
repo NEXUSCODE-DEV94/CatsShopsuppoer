@@ -220,7 +220,6 @@ class YuzuTicketView(ui.View):
                 view_channel=True,
                 send_messages=True
             )
-        )
         embed = discord.Embed(
             title=f"R18 Ticket | {user.name}",
             description="管理者の対応をお待ちください。",
@@ -509,6 +508,7 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
 
 
 
