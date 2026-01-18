@@ -26,6 +26,9 @@ CHANNEL_IDS = [
     1457317342488035502
 ]
 
+ERROR_NOTIFY_CHANNEL_ID = 1313099999537532928
+MENTION_USER_ID = 1396695477411381308
+
 UPDATE_INTERVAL = 200
 
 # ================= Intents =================
@@ -84,7 +87,23 @@ async def update_channel_names():
 @update_channel_names.before_loop
 async def before_update_channel_names():
     await bot.wait_until_ready()
+# --------logss----
+async def notify_error(error: Exception):
+    channel = bot.get_channel(ERROR_NOTIFY_CHANNEL_ID)
+    if channel is None:
+        return
 
+    await channel.send(f"<@{MENTION_USER_ID}>")
+
+    embed = discord.Embed(
+        title="エラーが発生しました",
+        description=f"```\n{error}\n```",
+        color=0xFF0000
+    )
+    await channel.send(embed=embed)
+
+    except Exception as e:
+        await notify_error(e)
 # ================= コマンド読み込み =================
 async def load_all_commands():
     for cmd in [
@@ -117,3 +136,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
