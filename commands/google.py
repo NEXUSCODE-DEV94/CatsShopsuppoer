@@ -14,7 +14,7 @@ class GoogleSearch(commands.Cog):
         search_url = f"https://www.google.com/search?q={encoded_word}"
 
         embed = discord.Embed(
-            title=f"🔍 「{word}」の検索結果",
+            title=f"「{word}」の検索結果",
             description=f"以下のリンクからGoogle検索結果を確認できます。\n\n**[ここをクリックして検索結果を表示]({search_url})**",
             color=0x4285F4
         )
