@@ -30,6 +30,7 @@ ERROR_NOTIFY_CHANNEL_ID = 1313099999537532928
 MENTION_USER_ID = 1396695477411381308
 
 UPDATE_INTERVAL = 200
+# ======================================
 
 # ================= Intents =================
 intents = discord.Intents.default()
@@ -54,56 +55,56 @@ async def on_ready():
 
     print(f"BOT READY : {bot.user}")
 
-# ================= 自動更新タスク =================
-@tasks.loop(seconds=UPDATE_INTERVAL)
-async def update_channel_names():
-    guild = bot.get_guild(GUILD_ID)
-    if guild is None:
-        print("guild取得失敗")
-        return
-
-    for channel_id in CHANNEL_IDS:
-        channel = guild.get_channel(channel_id)
-        if channel is None:
-            print(f"channel取得失敗: {channel_id}")
-            continue
-
-        count = 0
-        async for _ in channel.history(limit=None):
-            count += 1
-
-        new_name = re.sub(r"\d+", str(count), channel.name)
-
-        if new_name == channel.name:
-            new_name = f"{channel.name}{count}"
-
-        if channel.name != new_name:
-            try:
-                await channel.edit(name=new_name)
-                print(f"更新: {channel.name} → {new_name}")
-            except discord.HTTPException as e:
-                print(f"更新失敗 ({channel.id}): {e}")
-
-@update_channel_names.before_loop
-async def before_update_channel_names():
-    await bot.wait_until_ready()
-# --------logss----
+# ================= エラー通知 =================
 async def notify_error(error: Exception):
     channel = bot.get_channel(ERROR_NOTIFY_CHANNEL_ID)
     if channel is None:
         return
 
+    # 通常メッセージでメンション
     await channel.send(f"<@{MENTION_USER_ID}>")
 
-    embed = discord.Embed(
+    # 埋め込み
+    embed_msg = discord.Embed(
         title="エラーが発生しました",
         description=f"```\n{error}\n```",
         color=0xFF0000
     )
-    await channel.send(embed=embed)
+    await channel.send(embed=embed_msg)
+
+# ================= 自動更新タスク =================
+@tasks.loop(seconds=UPDATE_INTERVAL)
+async def update_channel_names():
+    try:
+        guild = bot.get_guild(GUILD_ID)
+        if guild is None:
+            raise RuntimeError("Guildが取得できません")
+
+        for channel_id in CHANNEL_IDS:
+            channel = guild.get_channel(channel_id)
+            if channel is None:
+                continue
+
+            count = 0
+            async for _ in channel.history(limit=None):
+                count += 1
+
+            # 数字だけ置換
+            new_name = re.sub(r"\d+", str(count), channel.name)
+
+            if new_name == channel.name:
+                new_name = f"{channel.name}{count}"
+
+            if channel.name != new_name:
+                await channel.edit(name=new_name)
 
     except Exception as e:
         await notify_error(e)
+
+@update_channel_names.before_loop
+async def before_update_channel_names():
+    await bot.wait_until_ready()
+
 # ================= コマンド読み込み =================
 async def load_all_commands():
     for cmd in [
@@ -136,4 +137,3 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
-
