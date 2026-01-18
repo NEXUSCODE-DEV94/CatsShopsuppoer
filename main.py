@@ -4,6 +4,10 @@ from aiohttp import web
 from commands import verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke
 from config import TOKEN, GUILD_ID, CHANNEL_ID, UPDATE_INTERVAL
 
+GUILD_ID = 1313077923741438004
+CHANNEL_ID = 1363459327448584192
+UPDATE_INTERVAL = 200  # 秒
+
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
@@ -38,7 +42,29 @@ async def update_channel_name():
             await channel.edit(name=new_name)
         except discord.HTTPException:
             print("チャンネル名更新でエラー発生（レート制限かも）")
+# --------------- kousinn22 -----------
+@tasks.loop(seconds=UPDATE_INTERVAL)
+async def update_channel_name():
+    guild = bot.get_guild(GUILD_ID)
+    if not guild:
+        return
 
+    channel = guild.get_channel(CHANNEL_ID)
+    if not channel:
+        return
+
+    counter = 0
+    async for _ in channel.history(limit=None):
+        counter += 1
+
+    new_name = re.sub(r"\d+", str(counter), channel.name)
+
+    if channel.name != new_name:
+        try:
+            await channel.edit(name=new_name)
+            print(f"更新完了: {new_name}")
+        except discord.HTTPException:
+            print("チャンネル名更新でエラー発生（レート制限の可能性）")
 # ---------------- コマンドセットアップ ----------------
 async def load_all_commands():
     for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke]:
@@ -54,3 +80,4 @@ async def start():
     await bot.start(TOKEN)
 
 asyncio.run(start())
+
