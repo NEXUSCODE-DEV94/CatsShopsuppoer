@@ -18,20 +18,25 @@ from commands import (
 
 from config import TOKEN
 
-# ===== 設定 =====
+# ================= 設定 =================
 GUILD_ID = 1313077923741438004
-CHANNEL_ID = 1363459327448584192
-UPDATE_INTERVAL = 200  # 秒
 
-# ===== Intents =====
+CHANNEL_IDS = [
+    1363459327448584192,
+    1457317342488035502
+]
+
+UPDATE_INTERVAL = 200
+
+# ================= Intents =================
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
-intents.message_content = True  # ← 必須
+intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ===== Bot Ready =====
+# ================= Bot Ready =================
 @bot.event
 async def on_ready():
     bot.add_view(verify.VerifyView())
@@ -41,44 +46,46 @@ async def on_ready():
 
     await bot.tree.sync()
 
-    if not update_channel_name.is_running():
-        update_channel_name.start()
+    if not update_channel_names.is_running():
+        update_channel_names.start()
 
     print(f"BOT READY : {bot.user}")
 
-# ===== 自動更新タスク =====
+# ================= 自動更新タスク =================
 @tasks.loop(seconds=UPDATE_INTERVAL)
-async def update_channel_name():
+async def update_channel_names():
     guild = bot.get_guild(GUILD_ID)
     if guild is None:
         print("guild取得失敗")
         return
 
-    channel = guild.get_channel(CHANNEL_ID)
-    if channel is None:
-        print("channel取得失敗")
-        return
+    for channel_id in CHANNEL_IDS:
+        channel = guild.get_channel(channel_id)
+        if channel is None:
+            print(f"channel取得失敗: {channel_id}")
+            continue
 
-    counter = 0
-    async for _ in channel.history(limit=None):
-        counter += 1
+        count = 0
+        async for _ in channel.history(limit=None):
+            count += 1
 
-    # 数字だけ置換
-    new_name = re.sub(r"\d+", str(counter), channel.name)
+        new_name = re.sub(r"\d+", str(count), channel.name)
 
-    if channel.name != new_name:
-        try:
-            await channel.edit(name=new_name)
-            print(f"チャンネル名更新: {new_name}")
-        except discord.HTTPException as e:
-            print(f"更新失敗: {e}")
+        if new_name == channel.name:
+            new_name = f"{channel.name}{count}"
 
-# Bot が ready になるまで待つ
-@update_channel_name.before_loop
-async def before_update_channel_name():
+        if channel.name != new_name:
+            try:
+                await channel.edit(name=new_name)
+                print(f"更新: {channel.name} → {new_name}")
+            except discord.HTTPException as e:
+                print(f"更新失敗 ({channel.id}): {e}")
+
+@update_channel_names.before_loop
+async def before_update_channel_names():
     await bot.wait_until_ready()
 
-# ===== コマンド読み込み =====
+# ================= コマンド読み込み =================
 async def load_all_commands():
     for cmd in [
         verify,
@@ -92,7 +99,7 @@ async def load_all_commands():
     ]:
         await cmd.setup(bot)
 
-# ===== 起動処理 =====
+# ================= 起動処理 =================
 async def start():
     await load_all_commands()
 
