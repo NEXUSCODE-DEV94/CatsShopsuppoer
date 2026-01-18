@@ -29,7 +29,8 @@ CHANNEL_IDS = [
 ERROR_NOTIFY_CHANNEL_ID = 1313099999537532928
 MENTION_USER_ID = 1396695477411381308
 
-UPDATE_INTERVAL = 200
+# Discordの制限（10分に2回まで）を考慮し、短すぎない値を推奨
+UPDATE_INTERVAL = 500
 # ======================================
 
 # ================= Intents =================
@@ -85,16 +86,23 @@ async def update_channel_names():
             if channel is None:
                 continue
 
+            # メッセージ数をカウント
             count = 0
             async for _ in channel.history(limit=None):
                 count += 1
 
-            # 数字だけ置換
-            new_name = re.sub(r"\d+", str(count), channel.name)
+            # 【修正点】《 》の中の数字だけを置換する正規表現
+            # 例: "在庫《101》個" -> "在庫《105》個"
+            pattern = r"(?<=《)\d+(?=》)"
+            
+            if re.search(pattern, channel.name):
+                # 既に 《数字》 がある場合は置換
+                new_name = re.sub(pattern, str(count), channel.name)
+            else:
+                # 《数字》 が無い場合は末尾に付与（フォールバック）
+                new_name = f"{channel.name}《{count}》"
 
-            if new_name == channel.name:
-                new_name = f"{channel.name}{count}"
-
+            # チャンネル名が実際に変わる場合のみ編集を実行（API制限対策）
             if channel.name != new_name:
                 await channel.edit(name=new_name)
 
@@ -123,6 +131,7 @@ async def load_all_commands():
 async def start():
     await load_all_commands()
 
+    # ヘルスチェック用のWebサーバー（Renderなどの維持用）
     app = web.Application()
     app.router.add_get("/", lambda r: web.Response(text="ok"))
 
@@ -136,4 +145,5 @@ async def start():
 
     await bot.start(TOKEN)
 
-asyncio.run(start())
+if __name__ == "__main__":
+    asyncio.run(start())
