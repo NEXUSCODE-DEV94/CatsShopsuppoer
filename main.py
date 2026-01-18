@@ -13,8 +13,7 @@ from commands import (
     embed,
     dm,
     name_change,
-    nuke,
-    google
+    nuke
 )
 
 from config import TOKEN
@@ -148,4 +147,5 @@ async def start():
 
 if __name__ == "__main__":
     asyncio.run(start())
+
 
