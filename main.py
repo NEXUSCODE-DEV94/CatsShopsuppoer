@@ -36,17 +36,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # ================= Bot Ready =================
 @bot.event
 async def on_ready():
-    # --- ビューの永続化登録 ---
-    # パネル側のボタン
     bot.add_view(ticket_panel.TicketPanel())
-    # チケット作成後にチャンネル内に表示されるボタン（★これが重要）
     bot.add_view(ticket_panel.TicketView())
-    
     bot.add_view(verify.VerifyView())
     bot.add_view(yuzu_panel.YuzuTicketView())
     bot.add_view(vending_panel.VendingView())
 
-    # スラッシュコマンドの同期
     await bot.tree.sync()
 
     if not update_channel_names.is_running():
@@ -86,11 +81,9 @@ async def before_update_channel_names():
 
 # ================= 起動処理 =================
 async def start():
-    # 各モジュールのsetupを実行（コマンド登録など）
     for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke]:
         await cmd.setup(bot)
 
-    # Render等のWebサーバー維持用
     app = web.Application()
     app.router.add_get("/", lambda r: web.Response(text="ok"))
     runner = web.AppRunner(app)
@@ -101,3 +94,4 @@ async def start():
 
 if __name__ == "__main__":
     asyncio.run(start())
+
