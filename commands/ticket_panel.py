@@ -104,7 +104,7 @@ async def ticket_panel_command(interaction: Interaction):
         description="## __Ticket Panel__\n> 購入：お問い合わせ\n> 迷惑行為禁止",
         color=discord.Color.blue()
     )
-    embed.set_image(url="ここに画像URLを貼る")
+    embed.set_image(url="https://i.postimg.cc/vB8mJrhs/catsshopticketgiggg.gif")
     await interaction.response.send_message(embed=embed, view=TicketPanel())
 
 async def setup(bot):
