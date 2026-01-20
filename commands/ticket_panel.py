@@ -41,9 +41,9 @@ class TicketView(ui.View):
 class TicketPanelSelect(ui.Select):
     def __init__(self, user: discord.Member):
         options = [
-            discord.SelectOption(label="ゲーム", emoji="🎮"),
-            discord.SelectOption(label="アカウント", emoji="👤"),
-            discord.SelectOption(label="その他", emoji="❓")
+            discord.SelectOption(label="ゲーム", emoji="<:computer:1463159362922090539>"),
+            discord.SelectOption(label="アカウント", emoji="<:user:1463159533353308224>"),
+            discord.SelectOption(label="その他", emoji="<:mail:1463160014553350218>")
         ]
         super().__init__(
             placeholder="チケットの種類を選択",
