@@ -11,6 +11,10 @@ class TicketDeleteButton(ui.Button):
         )
 
     async def callback(self, interaction: Interaction):
+        admin_role = interaction.guild.get_role(ADMIN_GET_ROLE)
+        if admin_role not in interaction.user.roles:
+            return await interaction.response.send_message("この操作を実行する権限がありません。", ephemeral=True)
+            
         await interaction.channel.delete()
 
 class TicketCloseButton(ui.Button):
@@ -22,14 +26,26 @@ class TicketCloseButton(ui.Button):
         )
 
     async def callback(self, interaction: Interaction):
+        admin_role = interaction.guild.get_role(ADMIN_GET_ROLE)
+        if admin_role not in interaction.user.roles:
+            return await interaction.response.send_message("この操作を実行する権限がありません。", ephemeral=True)
+
         await interaction.response.defer(ephemeral=True)
+        
         for target, overwrite in interaction.channel.overwrites.items():
             if isinstance(target, discord.Member):
                 if not target.guild_permissions.administrator:
-                    await interaction.channel.set_permissions(target, send_messages=False)
+                    await interaction.channel.set_permissions(
+                        target, 
+                        view_channel=True,
+                        send_messages=False, 
+                        read_message_history=True
+                    )
+        
         done = interaction.guild.get_channel(DONE_CATEGORY_ID)
         if done:
             await interaction.channel.edit(category=done)
+            
         await interaction.followup.send("対応済みにしました（ユーザーの送信権限を停止しました）", ephemeral=True)
 
 class TicketView(ui.View):
@@ -56,27 +72,33 @@ class TicketPanelSelect(ui.Select):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
         if not category:
             return await interaction.response.send_message("エラー: カテゴリが見つかりません", ephemeral=True)
+            
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             self.user: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
         }
+        
         for rid in ADMIN_ROLE_ID:
             role = interaction.guild.get_role(rid)
             if role:
-                overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+                overwrites[role] = discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
+        
         ch = await category.create_text_channel(
             name=f"🎫｜{self.user.name}",
             overwrites=overwrites
         )
+        
         embed = discord.Embed(
             title=f"Ticket | {self.user.name}",
             description=f"**種別:** {self.values[0]}\n管理者の対応をお待ちください。",
             color=discord.Color.blue()
         )
+        
         notify_role = interaction.guild.get_role(ADMIN_GET_ROLE)
         content = self.user.mention
         if notify_role:
             content += f" {notify_role.mention}"
+            
         await ch.send(content, embed=embed, view=TicketView())
         await interaction.response.send_message(f"{ch.mention} を作成しました", ephemeral=True)
 
