@@ -42,7 +42,7 @@ async def on_ready():
     bot.add_view(verify.VerifyView())
     bot.add_view(yuzu_panel.YuzuTicketView())
     bot.add_view(vending_panel.VendingView())
-　　bot.add_view(vending_panel.PanelView())
+    bot.add_view(vending_panel.PanelView())
     bot.add_view(vending_panel.AdminControlView())
 
     await bot.tree.sync()
@@ -97,3 +97,4 @@ async def start():
 
 if __name__ == "__main__":
     asyncio.run(start())
+
