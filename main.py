@@ -13,7 +13,8 @@ from commands import (
     embed,
     dm,
     name_change,
-    nuke
+    nuke,
+    vending
 )
 
 from config import TOKEN
@@ -41,6 +42,8 @@ async def on_ready():
     bot.add_view(verify.VerifyView())
     bot.add_view(yuzu_panel.YuzuTicketView())
     bot.add_view(vending_panel.VendingView())
+　　bot.add_view(vending_panel.PanelView())
+    bot.add_view(vending_panel.AdminControlView())
 
     await bot.tree.sync()
 
@@ -81,7 +84,7 @@ async def before_update_channel_names():
 
 # ================= 起動処理 =================
 async def start():
-    for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke]:
+    for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke, vending]:
         await cmd.setup(bot)
 
     app = web.Application()
@@ -94,4 +97,3 @@ async def start():
 
 if __name__ == "__main__":
     asyncio.run(start())
-
