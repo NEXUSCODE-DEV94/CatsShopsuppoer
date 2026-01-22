@@ -12,8 +12,7 @@ from commands import (
     embed,
     dm,
     name_change,
-    nuke,
-    vending
+    nuke
 )
 from config import TOKEN
 
@@ -36,8 +35,6 @@ async def on_ready():
     bot.add_view(yuzu_panel.YuzuTicketView())
     bot.add_view(vending_panel.PanelView())
     bot.add_view(vending_panel.AdminControlView())
-    bot.add_view(vending.VendingView())
-    bot.add_view(vending.AdminControlView())
 
     guild = discord.Object(id=GUILD_ID)
     bot.tree.copy_global_to(guild=guild)
@@ -72,7 +69,7 @@ async def before_update_channel_names():
     await bot.wait_until_ready()
 
 async def start():
-    for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke, vending]:
+    for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke]:
         await cmd.setup(bot)
     app = web.Application()
     app.router.add_get("/", lambda r: web.Response(text="ok"))
@@ -83,3 +80,4 @@ async def start():
 
 if __name__ == "__main__":
     asyncio.run(start())
+
