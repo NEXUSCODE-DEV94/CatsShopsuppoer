@@ -203,15 +203,19 @@ class PanelView(discord.ui.View):
         await interaction.response.send_message(embed=embed, view=ItemSelectView(self.items), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    @bot.tree.command(name="vending-panel", description="自販機パネルを設置します")
+    @bot.tree.command(name="r18-vending-panel", description="自販機パネルを設置します")
     async def vending_panel_cmd(interaction: discord.Interaction):
         if not os.path.exists("items.json"):
             await interaction.response.send_message("items.jsonが見つかりません。", ephemeral=True)
             return
         with open("items.json", "r", encoding="utf-8") as f:
             items = json.load(f)
+        
+        await interaction.response.send_message("設置完了！", ephemeral=True)
+        
         embed = discord.Embed(title="自販機パネル", description="商品を選択してください", color=discord.Color.green())
         for name, data in items.items():
             price = data.get("price", 0)
             embed.add_field(name=f"{name}", value=f"価格: {price}円", inline=False)
-        await interaction.response.send_message(embed=embed, view=PanelView(items))
+        
+        await interaction.channel.send(embed=embed, view=PanelView(items))
