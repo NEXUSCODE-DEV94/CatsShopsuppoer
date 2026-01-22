@@ -189,7 +189,7 @@ class VendingView(discord.ui.View):
         await interaction.response.send_message(embed=embed, view=ItemSelectView(self.items), ephemeral=True)
 
 async def setup(bot: commands.Bot):
-    @bot.tree.command(name="vending-panel", description="通常自販機パネルを設置します")
+    @bot.tree.command(name="r8-vending-panel", description="通常自販機パネルを設置します")
     async def vending_cmd(interaction: discord.Interaction):
         if not os.path.exists("items.json"):
             await interaction.response.send_message("items.jsonが見つかりません。", ephemeral=True)
