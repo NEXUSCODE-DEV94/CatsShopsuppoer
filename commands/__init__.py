@@ -6,3 +6,4 @@ from . import embed
 from . import dm
 from . import name_change
 from . import nuke
+from . import vending
