@@ -19,14 +19,10 @@ from commands import (
 
 from config import TOKEN
 
-# ================= 設定 =================
 GUILD_ID = 1313077923741438004
 CHANNEL_IDS = [1363459327448584192, 1457317342488035502]
-ERROR_NOTIFY_CHANNEL_ID = 1313099999537532928
-MENTION_USER_ID = 1396695477411381308
 UPDATE_INTERVAL = 500
 
-# ================= Intents =================
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
@@ -34,16 +30,18 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ================= Bot Ready =================
 @bot.event
 async def on_ready():
     bot.add_view(ticket_panel.TicketPanel())
     bot.add_view(ticket_panel.TicketView())
     bot.add_view(verify.VerifyView())
     bot.add_view(yuzu_panel.YuzuTicketView())
-    bot.add_view(vending_panel.VendingView())
+    
     bot.add_view(vending_panel.PanelView())
     bot.add_view(vending_panel.AdminControlView())
+    
+    bot.add_view(vending.VendingView())
+    bot.add_view(vending.AdminControlView())
 
     await bot.tree.sync()
 
@@ -52,7 +50,6 @@ async def on_ready():
 
     print(f"BOT READY : {bot.user}")
 
-# ================= 自動更新タスク =================
 @tasks.loop(seconds=UPDATE_INTERVAL)
 async def update_channel_names():
     try:
@@ -82,7 +79,6 @@ async def update_channel_names():
 async def before_update_channel_names():
     await bot.wait_until_ready()
 
-# ================= 起動処理 =================
 async def start():
     for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke, vending]:
         await cmd.setup(bot)
@@ -97,4 +93,3 @@ async def start():
 
 if __name__ == "__main__":
     asyncio.run(start())
-
