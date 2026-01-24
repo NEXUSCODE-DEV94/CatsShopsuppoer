@@ -31,10 +31,3 @@ ITEMS = {
     3: {"name":"捨てアドサイト","price":0,"stock":9999999999,"url":"https://www.gmailnator.com\nhttps://m.kuku.lu\nhttps://sute.jp\nhttps://dropmail.me"},
     4: {"name":"TikTok 無料＆透かしなしダウンロードサイト","price":0,"stock":9999999999,"url":"https://tiktokio.com/ja/"},
 }
-
-ADMIN_LOG_CHANNEL_ID = 1463501873586634782
-PURCHASE_LOG_CHANNEL_ID = 1463426467957440603
-MENTION_ROLE_ID = 1459385479026966661
-CUSTOMER_ROLE_ID = 1319214442537422878
-INVITE_LINK = "https://discord.gg/9WrjmX5Rw9"
-TARGET_CHANNEL_IDS = [1463458889831026739, 1463426467957440603]
