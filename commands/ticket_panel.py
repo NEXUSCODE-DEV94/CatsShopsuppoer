@@ -59,6 +59,8 @@ class TicketPanelSelect(ui.Select):
         options = [
             discord.SelectOption(label="ゲーム", emoji="<:computer:1463159362922090539>"),
             discord.SelectOption(label="アカウント", emoji="<:user:1463159533353308224>"),
+            discord.SelectOption(label="配布受け取り", emoji="<:present:1464785525880782918>")
+            discord.SelectOption(label="スロット購入", emoji="<:slots:1464787452219621500>")
             discord.SelectOption(label="その他", emoji="<:mail:1463160014553350218>")
         ]
         super().__init__(
