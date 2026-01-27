@@ -31,3 +31,5 @@ ITEMS = {
     3: {"name":"捨てアドサイト","price":0,"stock":9999999999,"url":"https://www.gmailnator.com\nhttps://m.kuku.lu\nhttps://sute.jp\nhttps://dropmail.me"},
     4: {"name":"TikTok 無料＆透かしなしダウンロードサイト","price":0,"stock":9999999999,"url":"https://tiktokio.com/ja/"},
 }
+
+TARGET_CHANNEL_IDS = [1463458889831026739, 1463426467957440603]
