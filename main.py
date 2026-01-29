@@ -29,12 +29,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
+    bot.add_view(verify.VerifyView())
     bot.add_view(ticket_panel.TicketPanel())
     bot.add_view(ticket_panel.TicketView())
-    bot.add_view(verify.VerifyView())
     bot.add_view(yuzu_panel.YuzuTicketView())
-    bot.add_view(vending_panel.PanelView())
-    bot.add_view(vending_panel.AdminControlView())
+    bot.add_view(vending_panel.VendingView()) # クラス名を修正
 
     guild = discord.Object(id=GUILD_ID)
     bot.tree.copy_global_to(guild=guild)
@@ -71,13 +70,14 @@ async def before_update_channel_names():
 async def start():
     for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke]:
         await cmd.setup(bot)
+    
     app = web.Application()
     app.router.add_get("/", lambda r: web.Response(text="ok"))
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 10000))).start()
+    
     await bot.start(TOKEN)
 
 if __name__ == "__main__":
     asyncio.run(start())
-
