@@ -40,7 +40,7 @@ class VendingView(ui.View):
         view.add_item(VendingSelect())
         await interaction.response.send_message("商品を選択してください。", view=view, ephemeral=True)
 
-@app_commands.command(name="vending-panel", description="無料自販機パネルを設置します")
+@app_commands.command(name="vending-panel1", description="無料自販機パネルを設置します")
 async def vending_panel_command(interaction: Interaction):
     items_text = "\n".join([f"**{item['name']}**" for item in ITEMS.values()])
     embed = discord.Embed(title="無料自販機", description=f"商品を選択してください\n\n{items_text}", color=discord.Color.green())
