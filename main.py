@@ -10,7 +10,7 @@ from commands import (
     verify,
     ticket_panel,
     yuzu_panel,
-    vending_panel,
+    vending_panel as vending_panel1, # 1. ここを変更
     embed,
     dm,
     name_change,
@@ -39,7 +39,7 @@ async def on_ready():
     bot.add_view(ticket_panel.TicketPanel())
     bot.add_view(ticket_panel.TicketView())
     bot.add_view(yuzu_panel.YuzuTicketView())
-    bot.add_view(vending_panel.VendingView())
+    bot.add_view(vending_panel1.VendingView()) # 修正後の変数名を使用
     print("Persistent Views added.")
 
     try:
@@ -79,7 +79,7 @@ async def start():
         ("verify", verify),
         ("ticket_panel", ticket_panel),
         ("yuzu_panel", yuzu_panel),
-        ("vending_panel", vending_panel),
+        ("vending_panel1", vending_panel1), # 2. ここを修正後の変数名に合わせる
         ("embed", embed),
         ("dm", dm),
         ("name_change", name_change),
