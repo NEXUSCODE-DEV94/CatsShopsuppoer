@@ -19,7 +19,6 @@ from commands import (
 from config import TOKEN
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('discord')
 
 GUILD_ID = 1313077923741438004
 CHANNEL_IDS = [1363459327448584192, 1457317342488035502]
@@ -32,30 +31,29 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-@bot.tree.error
-async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
-    print(f"Command Error: {error}")
-    if not interaction.response.is_done():
-        await interaction.response.send_message(f"エラーが発生しました: {error}", ephemeral=True)
-
 @bot.event
 async def on_ready():
+    print(f"--- ログイン成功: {bot.user} ---")
+    
     bot.add_view(verify.VerifyView())
     bot.add_view(ticket_panel.TicketPanel())
     bot.add_view(ticket_panel.TicketView())
     bot.add_view(yuzu_panel.YuzuTicketView())
     bot.add_view(vending_panel.VendingView())
+    print("Persistent Views added.")
 
-    print(f"Syncing commands for Guild ID: {GUILD_ID}...")
-    guild = discord.Object(id=GUILD_ID)
-    bot.tree.copy_global_to(guild=guild)
-    synced = await bot.tree.sync(guild=guild)
-    print(f"Synced {len(synced)} commands.")
+    try:
+        guild = discord.Object(id=GUILD_ID)
+        bot.tree.copy_global_to(guild=guild)
+        synced = await bot.tree.sync(guild=guild)
+        print(f"コマンド同期成功: {len(synced)}個のコマンドを同期しました")
+        for cmd in synced:
+            print(f"  - /{cmd.name}")
+    except Exception as e:
+        print(f"コマンド同期エラー: {e}")
 
     if not update_channel_names.is_running():
         update_channel_names.start()
-
-    print(f"--- BOT ONLINE: {bot.user} ---")
 
 @tasks.loop(seconds=UPDATE_INTERVAL)
 async def update_channel_names():
@@ -77,8 +75,23 @@ async def update_channel_names():
         print(f"Update Task Error: {e}")
 
 async def start():
-    for cmd in [verify, ticket_panel, yuzu_panel, vending_panel, embed, dm, name_change, nuke]:
-        await cmd.setup(bot)
+    cmd_modules = [
+        ("verify", verify),
+        ("ticket_panel", ticket_panel),
+        ("yuzu_panel", yuzu_panel),
+        ("vending_panel", vending_panel),
+        ("embed", embed),
+        ("dm", dm),
+        ("name_change", name_change),
+        ("nuke", nuke)
+    ]
+
+    for name, mod in cmd_modules:
+        try:
+            await mod.setup(bot)
+            print(f"モジュール読み込み成功: {name}")
+        except Exception as e:
+            print(f"モジュール読み込み失敗 [{name}]: {e}")
     
     app = web.Application()
     app.router.add_get("/", lambda r: web.Response(text="ok"))
@@ -89,9 +102,4 @@ async def start():
     await bot.start(TOKEN)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(start())
-    except KeyboardInterrupt:
-        pass
-    except Exception as e:
-        print(f"Startup Error: {e}")
+    asyncio.run(start())
