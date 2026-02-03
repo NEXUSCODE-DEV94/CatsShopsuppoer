@@ -1,7 +1,5 @@
 import discord
 from discord import ui, Interaction, app_commands
-from discord.ext import tasks
-from datetime import datetime, timedelta, timezone
 from config import ADMIN_ROLE_ID, TICKET_CATEGORY_ID, ADMIN_GET_ROLE, DONE_CATEGORY_ID
 
 class TicketDeleteButton(ui.Button):
@@ -50,9 +48,15 @@ class TicketCloseButton(ui.Button):
         
         done_category = interaction.guild.get_channel(DONE_CATEGORY_ID)
         if isinstance(done_category, discord.CategoryChannel):
-            await interaction.channel.edit(category=done_category)
-            
-        await interaction.followup.send("対応済みにしました。", ephemeral=True)
+            if len(done_category.channels) < 50:
+                await interaction.channel.edit(category=done_category)
+                await interaction.followup.send("対応済みに移動しました。", ephemeral=True)
+            else:
+                embed = discord.Embed(title="Error", description="対応済みカテゴリーが満杯です。手動で削除してください。", color=discord.Color.red())
+                embed.set_author(name="System", icon_url="https://i.postimg.cc/CxyfBNQ1/35112-error11.png")
+                await interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await interaction.followup.send("対応済み設定を完了しました（移動先カテゴリ未設定）。", ephemeral=True)
 
 class TicketView(ui.View):
     def __init__(self):
@@ -78,8 +82,8 @@ class TicketPanelSelect(ui.Select):
 
     async def callback(self, interaction: Interaction):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
-        if not category:
-            embed = discord.Embed(title="Error", description="カテゴリが見つかりません。", color=discord.Color.red())
+        if not category or len(category.channels) >= 50:
+            embed = discord.Embed(title="Error", description="カテゴリーが見つからないか、満杯で作成できません。", color=discord.Color.red())
             embed.set_author(name="System", icon_url="https://i.postimg.cc/CxyfBNQ1/35112-error11.png")
             return await interaction.response.send_message(embed=embed, ephemeral=True)
             
@@ -130,35 +134,10 @@ class TicketPanel(ui.View):
         super().__init__(timeout=None)
         self.add_item(TicketPanelButton())
 
-@tasks.loop(minutes=1)
-async def auto_delete_inactive_tickets(bot):
-    for guild in bot.guilds:
-        category = guild.get_channel(TICKET_CATEGORY_ID)
-        if not category or not isinstance(category, discord.CategoryChannel):
-            continue
-            
-        admin_role_id = 1459385479026966661
-        now = datetime.now(timezone.utc)
-        
-        for channel in category.text_channels:
-            last_msg = None
-            async for message in channel.history(limit=1):
-                last_msg = message
-            
-            if last_msg:
-                elapsed = now - last_msg.created_at
-                if elapsed > timedelta(hours=1):
-                    is_admin = False
-                    if isinstance(last_msg.author, discord.Member):
-                        is_admin = any(r.id == admin_role_id for r in last_msg.author.roles)
-                    
-                    if not is_admin:
-                        await channel.delete()
-
 @app_commands.command(name="ticket_panel", description="チケットパネルを設置します")
 async def ticket_panel_command(interaction: Interaction):
     embed = discord.Embed(
-        description="## __Ticket Panel__\n> 購入：お問い合わせ\n> 迷惑行為禁止\n 無言チケットは__BAN__対象です",
+        description="## __Ticket Panel__\n> 購入：お問い合わせ\n> 迷惑行為禁止\n>  無言チケットは__BAN__対象です",
         color=discord.Color.blue()
     )
     embed.set_image(url="https://i.postimg.cc/vB8mJrhs/catsshopticketgiggg.gif")
@@ -166,5 +145,3 @@ async def ticket_panel_command(interaction: Interaction):
 
 async def setup(bot):
     bot.tree.add_command(ticket_panel_command)
-    if not auto_delete_inactive_tickets.is_running():
-        auto_delete_inactive_tickets.start(bot)
