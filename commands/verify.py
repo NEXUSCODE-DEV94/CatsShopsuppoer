@@ -22,21 +22,22 @@ class CalculationModal(ui.Modal):
         self.add_item(self.user_answer)
 
     async def on_submit(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True)
         try:
             val = int(self.user_answer.value)
         except ValueError:
             embed = discord.Embed(title="Error", description="数字を入力してください。", color=discord.Color.red())
             embed.set_author(name="System", icon_url="https://i.postimg.cc/CxyfBNQ1/35112-error11.png")
-            return await interaction.response.send_message(embed=embed, ephemeral=True)
+            return await interaction.followup.send(embed=embed, ephemeral=True)
 
         if val != self.answer:
             embed = discord.Embed(title="Error", description="答えが間違っています。もう一度やり直してください。", color=discord.Color.red())
             embed.set_author(name="System", icon_url="https://i.postimg.cc/CxyfBNQ1/35112-error11.png")
-            return await interaction.response.send_message(embed=embed, ephemeral=True)
+            return await interaction.followup.send(embed=embed, ephemeral=True)
 
         await interaction.user.add_roles(self.role)
         embed = discord.Embed(title="### Success", description="認証が完了しました。全てのコンテンツを利用可能です。", color=discord.Color.green())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
 class VerifyView(ui.View):
     def __init__(self):
@@ -55,11 +56,12 @@ class VerifyView(ui.View):
 async def setup(bot):
     @bot.tree.command(name="verify", description="認証パネルを設置します")
     async def verify(interaction: Interaction):
+        await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(
-            title="Member Verification", 
-            description="### Click to Verify\n下のボタンを押して計算クイズに回答してください。\n\n認証後 [こちら](https://ptb.discord.com/channels/1313077923741438004/1313097431508058153) に同意したとみなします。", 
+            title="Verification", 
+            description="### 下のボタンを押して計算クイズに回答してください。\n\n認証後 https://discord.com/channels/1313077923741438004/1313097431508058153 に同意したとみなします。", 
             color=discord.Color.from_rgb(43, 45, 49)
         )
         embed.set_image(url=IMAGE_URL)
         await interaction.channel.send(embed=embed, view=VerifyView())
-        await interaction.response.send_message("Verification Panel Deployed", ephemeral=True)
+        await interaction.followup.send("Verification Panel Deployed", ephemeral=True)
