@@ -36,7 +36,7 @@ class CalculationModal(ui.Modal):
             return await interaction.followup.send(embed=embed, ephemeral=True)
 
         await interaction.user.add_roles(self.role)
-        embed = discord.Embed(title="### Success", description="認証が完了しました。全てのコンテンツを利用可能です。", color=discord.Color.green())
+        embed = discord.Embed(title="Success", description="認証が完了しました。全てのコンテンツを利用可能です。", color=discord.Color.green())
         await interaction.followup.send(embed=embed, ephemeral=True)
 
 class VerifyView(ui.View):
@@ -47,7 +47,7 @@ class VerifyView(ui.View):
     async def verify_button(self, interaction: Interaction, button: ui.Button):
         role = interaction.guild.get_role(VERIFY_ROLE_ID)
         if role in interaction.user.roles:
-            embed = discord.Embed(title="### Information", description="既に認証済みです。", color=discord.Color.blue())
+            embed = discord.Embed(title="Information", description="既に認証済みです。", color=discord.Color.blue())
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
         
@@ -62,5 +62,4 @@ async def setup(bot):
             color=discord.Color.from_rgb(43, 45, 49)
         )
         embed.set_image(url=IMAGE_URL)
-        # ここで直接responseとしてパネルを返すことでメッセージを1つに絞ります
         await interaction.response.send_message(embed=embed, view=VerifyView())
