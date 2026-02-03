@@ -137,7 +137,7 @@ class TicketPanel(ui.View):
 @app_commands.command(name="ticket_panel", description="チケットパネルを設置します")
 async def ticket_panel_command(interaction: Interaction):
     embed = discord.Embed(
-        description="## __Ticket Panel__\n> 購入：お問い合わせ\n> 迷惑行為禁止\n>  無言チケットは__BAN__対象です",
+        description="## __Ticket Panel__\n> 購入：お問い合わせ\n> 迷惑行為禁止\n> 無言チケットは__BAN__対象です",
         color=discord.Color.blue()
     )
     embed.set_image(url="https://i.postimg.cc/vB8mJrhs/catsshopticketgiggg.gif")
