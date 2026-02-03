@@ -56,12 +56,11 @@ class VerifyView(ui.View):
 async def setup(bot):
     @bot.tree.command(name="verify", description="認証パネルを設置します")
     async def verify(interaction: Interaction):
-        await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(
-            title="Verification", 
+            title="Member Verification", 
             description="### 下のボタンを押して計算クイズに回答してください。\n\n認証後 https://discord.com/channels/1313077923741438004/1313097431508058153 に同意したとみなします。", 
             color=discord.Color.from_rgb(43, 45, 49)
         )
         embed.set_image(url=IMAGE_URL)
-        await interaction.channel.send(embed=embed, view=VerifyView())
-        await interaction.followup.send("Verification Panel Deployed", ephemeral=True)
+        # ここで直接responseとしてパネルを返すことでメッセージを1つに絞ります
+        await interaction.response.send_message(embed=embed, view=VerifyView())
